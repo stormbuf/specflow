@@ -1,0 +1,8 @@
+*.log
+.DS_Store
+specflow/state.json
+/.opencode/*
+!/.opencode/skills/
+/.opencode/skills/*
+!/.opencode/skills/specflow-workflow
+!/.opencode/skills/install-specflow-workflow
