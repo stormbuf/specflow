@@ -1,14 +1,14 @@
 # Archive Stage
 
-本文件定义归档阶段。Archive 将 spec-delta 合并回主 spec，根据 design 同步长期架构文档和 ADR，并冻结本次变更记录。
+本文件定义归档阶段。Archive 将 spec-delta 合并回主 spec，校验 System Architecture / ADR 阶段已确认并写入的系统架构和 ADR，并冻结本次变更记录。Archive 不创建或修改长期文档。
 
 路径锚定：本文件中的 `specflow/`、版本管理和项目规则路径均相对于 `{PROJECT_ROOT}/`；只有 `{SKILL_DIR}/assets/architecture.md` 和 `{SKILL_DIR}/assets/adr.md` 来自 skill 目录。
 
 ## 目标
 
 - 将 `specflow/changes/<change-id>/spec-delta.md` 合并到 `specflow/specs/<capability>.md`。
-- 当 design 标记长期架构影响时，更新或创建 `specflow/architecture.md`。
-- 当 design 标记长期技术决策时，创建或更新 `specflow/adr/NNNN-short-title.md`。
+- 当 design 标记系统架构影响时，校验 `specflow/architecture.md` 已由 System Architecture / ADR 阶段更新或创建。
+- 当 design 标记长期技术决策时，校验 `specflow/adr/NNNN-short-title.md` 已由 System Architecture / ADR 阶段创建或更新。
 - 保留 `specflow/changes/<change-id>/` 作为历史记录。
 - 使用当前项目实际采用的版本管理工具封存归档结果，提交或变更描述必须包含 `change-id: <change-id>`。
 - 不使用外部 archive 机制。
@@ -23,26 +23,20 @@
 - 目标 `specflow/specs/<capability>.md`
 - `specflow/roadmap.md`，如果 proposal.md 记录了 Roadmap 来源
 
-## 长期文档同步
+## 长期文档校验
 
 ```text
 IF design.md 中 architecture_update = yes:
-  IF specflow/architecture.md 不存在:
-    使用 {SKILL_DIR}/assets/architecture.md 创建 {PROJECT_ROOT}/specflow/architecture.md
-  ELSE:
-    更新 specflow/architecture.md 的对应章节
-  只写入 design 已确认内容和已有项目事实
+  IF specflow/architecture.md 不存在或未包含已确认的系统边界图和系统架构图:
+    暂停并进入 System Architecture / ADR 阶段
 IF design.md 中 adr_needed = yes:
-  IF ADR 候选是新决策:
-    使用 {SKILL_DIR}/assets/adr.md 创建 {PROJECT_ROOT}/specflow/adr/NNNN-short-title.md
-  ELSE IF ADR 候选修订既有决策:
-    更新既有 ADR，或创建新 ADR 并将旧 ADR 状态改为 superseded
-  只写入 design 的 ADR 候选和已确认取舍
+  IF specflow/adr/ 不存在、对应 ADR 缺失，或没有记录已确认的长期技术决策:
+    暂停并进入 System Architecture / ADR 阶段
 ```
 
-`specflow/architecture.md` 记录当前系统长期结构和现状。`specflow/adr/` 记录长期技术决策及其理由。不得把未经 Design 阶段确认的推断写入长期文档。
+`specflow/architecture.md` 只记录系统边界图和系统架构图。`specflow/adr/` 记录不可逆或未来容易忘的长期决策及其理由。不得把未经 System Architecture / ADR 阶段确认的推断写入长期文档。
 
-职责边界：Design 负责发现、讨论和标记长期影响；Archive 负责创建或维护 `specflow/architecture.md` 与 `specflow/adr/`。
+职责边界：系统架构和 ADR 的首次创建、后续更新、替代或废弃均在 System Architecture / ADR 阶段完成；Archive 不创建或修改长期文档，只校验长期文档已经反映已确认内容。
 
 ## Roadmap 同步
 
@@ -83,41 +77,20 @@ ELSE IF 当前 change 目录中的 tasks.md 存在未完成任务且没有 Notes
   暂停，完成任务或记录例外
 ELSE IF spec-delta 无法无歧义合并到主 spec:
   暂停，说明冲突并请求用户确认
-ELSE IF design.md 标记 architecture_update = yes 但没有可同步内容:
-  暂停并返回 Design 阶段补齐
-ELSE IF design.md 标记 adr_needed = yes 但没有 ADR 候选:
-  暂停并返回 Design 阶段补齐
-ELSE IF 需要创建 ADR 但无法确定下一个 ADR 编号:
-  暂停，检查 specflow/adr/ 后确定编号
+ELSE IF design.md 标记 architecture_update = yes 但 architecture.md 缺失或未反映已确认内容:
+  暂停并进入 System Architecture / ADR 阶段
+ELSE IF design.md 标记 adr_needed = yes 但 ADR 缺失或未反映已确认决策:
+  暂停并进入 System Architecture / ADR 阶段
 ELSE IF proposal.md 记录 Roadmap 来源但无法在 specflow/roadmap.md 定位对应条目:
   暂停，说明缺失项并询问用户是否跳过同步或手动指定条目
 ELSE IF 无法判断当前项目使用的版本管理工具:
   暂停，读取项目规则或询问用户
 ```
 
-## 版本管理
-
-```text
-IF 项目规则明确指定版本管理工具:
-  使用项目规则指定的工具
-ELSE IF 仓库事实能判断版本管理工具:
-  使用仓库事实对应的工具
-ELSE:
-  询问用户
-```
-
-提交或变更描述必须显式说明 `change-id`。示例：
-
-```text
-docs: archive workflow change
-
-change-id: 2026-06-06-refine-workflow-skill-0
-```
-
 ## 完成条件
 
 - 主 spec 反映本次变更后的当前系统行为。
-- `specflow/architecture.md` 反映本次变更后的长期架构影响，若 design 标记需要同步。
+- `specflow/architecture.md` 反映本次变更后的系统边界图和系统架构图，若 design 标记需要同步。
 - `specflow/adr/` 记录本次确认的长期技术决策，若 design 标记需要 ADR。
 - 变更目录保留为历史记录，不再修改。
 - 如果 proposal.md 记录 Roadmap 来源，`specflow/roadmap.md` 已将对应项移入已完成历史。

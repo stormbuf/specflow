@@ -30,27 +30,19 @@
 - [ ] 1.1 <任务描述>
 ```
 
-功能实现任务必须按“子项实现 -> 子项测试 -> 子项审查 -> 功能质量门禁”展开：
-
-```markdown
-## N. 功能：<功能名>
-
-- [ ] N.1 实现 <可独立验证子项 A>
-- [ ] N.2 测试 <可独立验证子项 A>
-- [ ] N.3 审查 <可独立验证子项 A>
-- [ ] N.4 实现 <可独立验证子项 B>
-- [ ] N.5 测试 <可独立验证子项 B>
-- [ ] N.6 审查 <可独立验证子项 B>
-- [ ] N.7 执行 <功能名> 质量门禁
-```
+功能实现任务必须按“子项实现 -> 子项测试 -> 子项审查 -> 功能质量门禁”展开。
 
 ## 拆解规则
 
 先读取 `{SKILL_DIR}/assets/rules.md`，将其中适用于本次变更的约束编排进任务清单：
 
 ```text
-IF 项目缺少 architecture.md 和有效 ADR，且本次变更需要生成代码或确定实现结构，但 design.md 未标记 architecture_baseline_confirmed = yes:
-  暂停并返回 Design 阶段完成架构基线讨论，不生成 tasks.md
+IF 项目缺少 architecture.md，且本次变更需要生成代码或确定实现结构:
+  暂停并进入 System Architecture / ADR 阶段，不生成 tasks.md
+IF 本次变更涉及 ADR 适用范围中的长期决策且对应 ADR 缺失:
+  暂停并进入 System Architecture / ADR 阶段，不生成 tasks.md
+IF design.md 标记 architecture_update = yes 或 adr_needed = yes:
+  暂停并进入 System Architecture / ADR 阶段，不生成 tasks.md
 IF rules.md 中约束要求执行前检查、测试、安全扫描、审查或质量门禁:
   按“子项后测试审查、功能后质量门禁”生成对应任务
 ELSE IF rules.md 中约束不适用于本次变更:
@@ -81,21 +73,11 @@ IF 一个功能包含多个可独立验证子项:
 4. 验证：检查任务遗漏、例外说明和检查结果，并记录摘要。
 5. 归档：合并 spec-delta 到主 spec。
 
-## 多 Agent 节奏
-
-```text
-IF 平台支持多 agent 且任务风险非低:
-  调度/代码/测试/审查按子项串行推进
-ELSE:
-  当前 agent 按相同职责顺序执行，不跳过测试或审查
-```
-
-同一子项测试或审查返修最多 3 轮；仍未通过时阻断用户。
-
 ## 完成条件
 
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/tasks.md` 存在。
-- 如果项目缺少 architecture.md 和有效 ADR，且本次变更需要生成代码或确定实现结构，design.md 已标记 architecture_baseline_confirmed = yes。
+- 如果本次变更需要生成代码或确定实现结构，architecture.md 已存在；涉及 ADR 适用范围时，对应 ADR 已存在。
+- 如果 design.md 标记 architecture_update = yes 或 adr_needed = yes，对应 System Architecture / ADR 已完成。
 - 已按当前 `{SKILL_DIR}/assets/rules.md` 编排适用的检查、测试、审查和质量门禁任务。
 - 每个可独立验证子项后紧跟测试和审查任务。
 - 每个功能末尾存在质量门禁任务。

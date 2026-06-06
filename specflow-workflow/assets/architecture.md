@@ -1,24 +1,38 @@
-# Architecture
+# System Architecture
 
-## 系统概览
+## 系统边界图
 
-## 模块边界
+```mermaid
+flowchart LR
+  user[用户 / 角色]
+  system[当前系统]
+  external[外部系统]
 
-## 数据流
+  user -->|输入 / 请求| system
+  system -->|输出 / 调用| external
+```
 
-## 运行 / 部署形态
+## 系统架构图
 
-## 安全边界
+```mermaid
+flowchart TB
+  subgraph system[当前系统]
+    module[模块 / 服务]
+    datastore[(数据存储)]
+    module --> datastore
+  end
 
-## 基础设施
-
-## 技术栈
-
-## 当前约束
+  integration[关键集成]
+  module --> integration
+```
 
 ## 相关 ADR
 
 - 
+
+## 用户确认记录
+
+<!-- 摘录 System Architecture / ADR 阶段用户逐题确认原文或确认摘要。 -->
 
 ## 最近更新
 

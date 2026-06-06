@@ -1,14 +1,14 @@
 ---
 name: specflow-workflow
-description: "[SLASH-ONLY] specflow-workflow。仅在用户显式调用 /specflow-workflow 时激活；用于稳定执行 Roadmap、Proposal、Spec Delta、Design、Tasks、Apply、Verify 和 Archive 全流程。"
+description: "[SLASH-ONLY] specflow-workflow。仅在用户显式调用 /specflow-workflow 时激活；用于稳定执行 Roadmap、Proposal、Spec Delta、System Architecture / ADR、Design、Tasks、Apply、Verify 和 Archive 全流程。"
 metadata:
   version: "0.1.0"
-  tags: "workflow,roadmap,spec,design,tasks,apply,archive"
+  tags: "workflow,roadmap,spec,architecture,design,tasks,apply,archive"
 ---
 
 # Specflow Workflow
 
-> AI 使用本 skill 执行独立的变更生命周期：版本规划 -> 提议讨论 -> 规约变更 -> 技术方案 -> 任务拆解 -> 执行 -> 验证 -> 归档。
+> AI 使用本 skill 执行独立的变更生命周期：版本规划 -> 提议讨论 -> 规约变更 -> 系统架构 / ADR -> 技术方案 -> 任务拆解 -> 执行 -> 验证 -> 归档。
 > 最高信条：阶段产物必须前后承接；执行阶段不得重新发明 proposal、spec-delta 或 design。
 >
 > 路径约定：`{SKILL_DIR}/` = 本 skill 所在目录，仅用于读取本 skill 自带的 `references/` 和 `assets/`；`{PROJECT_ROOT}/` = 用户调用 slash command 时的目标项目根目录。所有 `specflow/`、源码、测试、配置、版本管理路径均相对于 `{PROJECT_ROOT}/`，不得相对于 `{SKILL_DIR}/` 解析。
@@ -35,6 +35,9 @@ ELSE:
 | `/specflow-workflow proposal` | Proposal |
 | `/specflow-workflow sd` | Spec Delta |
 | `/specflow-workflow spec` | Spec Delta |
+| `/specflow-workflow arch` | System Architecture / ADR |
+| `/specflow-workflow architecture` | System Architecture / ADR |
+| `/specflow-workflow adr` | System Architecture / ADR |
 | `/specflow-workflow design` | Design |
 | `/specflow-workflow tasks` | Tasks |
 | `/specflow-workflow apply` | Apply |
@@ -89,7 +92,7 @@ YYYY-MM-DD-short-slug-N
 specflow/specs/<capability>.md
 ```
 
-`spec-delta.md` 是本次规约变化；`{PROJECT_ROOT}/specflow/specs/<capability>.md` 是归档后的主 spec。`design.md` 是本次设计讨论和方案收敛记录；归档时仅将已确认的长期影响提炼到 `{PROJECT_ROOT}/specflow/architecture.md` 或 `{PROJECT_ROOT}/specflow/adr/`。
+`spec-delta.md` 是本次规约变化；`{PROJECT_ROOT}/specflow/specs/<capability>.md` 是归档后的主 spec。`System Architecture / ADR` 负责系统边界图、系统架构图和 ADR 的首次创建、后续更新、替代或废弃；`design.md` 是本次功能设计工作台，只消费或请求更新系统架构和 ADR。Archive 不创建或修改长期文档，只校验长期文档已反映确认内容。
 
 ## 阶段路由
 
@@ -100,6 +103,8 @@ ELSE IF 参数 = pr OR proposal:
   执行 Proposal 阶段，详见 {SKILL_DIR}/references/proposal.md
 ELSE IF 参数 = sd OR spec:
   执行 Spec Delta 阶段，详见 {SKILL_DIR}/references/spec-delta.md
+ELSE IF 参数 = arch OR architecture OR adr:
+  执行 System Architecture / ADR 阶段，详见 {SKILL_DIR}/references/system-architecture-adr.md
 ELSE IF 参数 = design:
   执行 Design 阶段，详见 {SKILL_DIR}/references/design.md
 ELSE IF 参数 = tasks:
@@ -119,11 +124,12 @@ ELSE:
 1. Roadmap：维护规划台账和完成历史；Proposal 不强依赖 Roadmap。
 2. Proposal：明确为什么做、范围、非范围、变更类型、是否需要规约/设计。
 3. Spec Delta：描述本次对系统可观察行为的新增、修改、删除或重命名。
-4. Design：讨论并收敛实现方案，发现长期架构影响或 ADR 候选，记录接口、数据流、风险和验证策略。
-5. Tasks：将方案拆成可独立验证的执行项。
-6. Apply：按 tasks.md 顺序执行并更新复选框。
-7. Verify：检查 tasks 是否有遗漏项没做，并记录归档前验证摘要。
-8. Archive：将 spec-delta 合并回主 spec，冻结本次变更记录。
+4. System Architecture / ADR：固定先 ADR、后系统架构；当存在适用 ADR 的长期决策、缺少 architecture.md、系统边界图或系统架构图需要变化时，逐题讨论并按需更新长期文档；无改动则跳过，不硬改。
+5. Design：讨论并收敛本次实现方案，只消费系统架构和 ADR；发现缺失或需要长期决策时暂停并进入 System Architecture / ADR。
+6. Tasks：将方案拆成可独立验证的执行项。
+7. Apply：按 tasks.md 顺序执行并更新复选框。
+8. Verify：检查 tasks 是否有遗漏项没做，并记录归档前验证摘要。
+9. Archive：将 spec-delta 合并回主 spec，校验长期文档已反映 System Architecture / ADR / Design 确认内容，并冻结本次变更记录。
 
 ## 前置条件
 
@@ -151,25 +157,15 @@ ELSE:
 
 ## 阻断条件
 
+各阶段的详细阻断条件定义在对应 `references/` 文件中，以下为编排级规则：
+
 ```text
-IF proposal 仍有关键开放问题:
-  暂停，使用苏格拉底追问询问用户
-ELSE IF proposal 包含没有用户原话、当前对话、主 spec、架构文档、ADR、源码、测试或项目文档依据的新业务动机、范围、非范围或影响面:
-  暂停，移入开放问题并使用苏格拉底追问询问用户
-ELSE IF spec-delta 改变可观察行为但没有目标 capability:
-  暂停，补齐目标 {PROJECT_ROOT}/specflow/specs/<capability>.md 信息
-ELSE IF spec-delta 包含没有 proposal、主 spec、源码、测试或项目文档依据的新业务约束:
-  暂停，移入开放问题并使用苏格拉底追问询问用户
-ELSE IF design 与 spec-delta 冲突:
-  暂停，更新 design 或 spec-delta 后继续
-ELSE IF tasks 未覆盖 spec-delta 或 design 的关键约束:
-  暂停，补齐 tasks
-ELSE IF apply 需要偏离已确认设计:
-  暂停，说明原因并请求确认
-ELSE IF verify 失败且无法自行修复:
-  暂停，报告失败项和下一步选择
-ELSE IF archive 前 tasks 未完成且未记录例外:
-  暂停，完成任务或记录未完成原因
+IF 任一阶段产物缺失:
+  不跳过，返回补齐缺失产物
+ELSE IF 任一阶段执行中触发其 reference 定义的阻断:
+  暂停，处理阻断后恢复
+ELSE IF 阶段产物间发现冲突:
+  暂停，修正冲突文档后继续
 ```
 
 ## 模板
@@ -190,9 +186,10 @@ ELSE IF archive 前 tasks 未完成且未记录例外:
 1. 不使用外部 schema CLI、Delta、archive 或 schema validate 机制。
 2. 只在用户显式调用 `/specflow-workflow` 时激活，禁止自动匹配普通需求描述。
 3. `spec-delta.md` 不是主 spec；归档后必须合并到 `{PROJECT_ROOT}/specflow/specs/<capability>.md`。
-4. `design.md` 是本次设计工作台；长期架构和 ADR 必须来自 Design 阶段确认过的内容或已有项目事实。
+4. 系统架构和 ADR 必须来自 System Architecture / ADR 阶段的逐题用户确认或已有项目事实；Design 不临场创建或修改长期文档。
 5. `roadmap.md` 只维护规划台账和完成历史，不承载 proposal、design 或 tasks 细节。
 6. 执行阶段只按 `tasks.md` 推进，不重新设计需求或方案。
 7. Tasks 和 Apply 阶段每次运行都必须重新读取 `{SKILL_DIR}/assets/rules.md`，动态编排适用检查项，不复制或缓存规则正文。
 8. 验证主要检查 tasks 遗漏和例外；只记录结果摘要：passed / failed / partial、检查项和必要 notes。
-9. 发现阶段产物冲突时先暂停修正文档，再继续执行。
+9. 所有 UML 必须使用 Mermaid；系统架构只维护系统边界图和系统架构图。
+10. System Architecture / ADR 阶段固定先 ADR、后系统架构；系统架构和 ADR 必须逐个问题确认，每个问题给出调研后的 2-3 个方案、推荐方案，并保留用户自述选项；无改动则跳过，不硬改。
