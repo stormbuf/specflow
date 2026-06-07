@@ -145,14 +145,16 @@ IF 用户提供 change-id:
   如果目录存在，读取该目录下阶段产物并继续
   如果目录不存在，暂停并报告已检查的绝对路径，不创建同名变更
 ELSE IF {PROJECT_ROOT}/specflow/changes/ 下已有变更且用户未指定 change-id:
-  列出现有 change-id 并询问用户选择，除非当前阶段明确要创建新变更
+   列出 {PROJECT_ROOT}/specflow/changes/ 下所有子目录作为候选 change-id，询问用户选择
+   除非当前阶段明确要创建新变更
+   注意：列出时确保能匹配子目录——部分 glob 的 * 不匹配子目录，会导致误判为"无现存变更"
 ELSE IF 目标项目没有 {PROJECT_ROOT}/specflow/changes/<change-id>/ 且需要创建变更:
-  使用当前日期生成 YYYY-MM-DD-short-slug-N 格式 change-id
-  short-slug 使用 2-5 个英文 kebab-case 单词概括变更主题
-  N 从 0 开始，只有同日期、同 short-slug 已存在时才递增
-  创建 {PROJECT_ROOT}/specflow/changes/<change-id>/
+   使用当前日期生成 YYYY-MM-DD-short-slug-N 格式 change-id
+   short-slug 使用 2-5 个英文 kebab-case 单词概括变更主题
+   N 从 0 开始，只有同日期、同 short-slug 已存在时才递增（检查已有变更时同样注意上述子目录匹配陷阱）
+   创建 {PROJECT_ROOT}/specflow/changes/<change-id>/
 ELSE IF change-id 尚未确定:
-  以上各分支均未命中意味着 change-id 仍为空。不得在不经用户确认和不读取 specflow/changes/ 目录的情况下跳过或猜测 change-id。必须明确询问用户要操作的 change-id（列出现有变更供选择，或允许创建新变更）。
+   以上各分支均未命中意味着 change-id 仍为空。不得在不经用户确认和不读取 specflow/changes/ 目录的情况下跳过或猜测 change-id。必须明确询问用户要操作的 change-id（列出现有变更供选择，或允许创建新变更）。
 ELSE IF 阶段需要读取上游产物但文件缺失:
   暂停并补齐缺失产物，不跳过阶段
 ELSE:
