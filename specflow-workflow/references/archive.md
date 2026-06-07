@@ -1,98 +1,166 @@
 # Archive Stage
 
-本文件定义归档阶段。Archive 将 spec-delta 合并回主 spec，校验 System Architecture / ADR 阶段已确认并写入的系统架构和 ADR，并冻结本次变更记录。Archive 不创建或修改长期文档。
+本文件定义归档阶段。Archive 包含三个子阶段，顺序执行：**落账 → 归档 → 记账**。
+前一阶段阻断则整条链路中断。
 
-路径锚定：本文件中的 `specflow/`、版本管理和项目规则路径均相对于 `{PROJECT_ROOT}/`；只有 `{SKILL_DIR}/assets/architecture.md` 和 `{SKILL_DIR}/assets/adr.md` 来自 skill 目录。
+路径锚定：本文件中的 `specflow/`、版本管理和项目规则路径均相对于 `{PROJECT_ROOT}/`。
 
-## 目标
+---
 
-- 将 `specflow/changes/<change-id>/spec-delta.md` 合并到 `specflow/specs/<capability>.md`。
-- 当 design 标记系统架构影响时，校验 `specflow/architecture.md` 已由 System Architecture / ADR 阶段更新或创建。
-- 当 design 标记长期技术决策时，校验 `specflow/adr/NNNN-short-title.md` 已由 System Architecture / ADR 阶段创建或更新。
-- 保留 `specflow/changes/<change-id>/` 作为历史记录。
-- 使用当前项目实际采用的版本管理工具封存归档结果，提交或变更描述必须包含 `change-id: <change-id>`。
-- 不使用外部 archive 机制。
+## 1. 落账（Settlement）
 
-## 输入
+> spec-delta 的改动应用到主 spec，主 spec 成为系统当前行为的唯一真相。
+> 没有主 spec 则新建，移除功能则删除主 spec。
 
-- `specflow/changes/<change-id>/proposal.md`
+### 输入
+
 - `specflow/changes/<change-id>/spec-delta.md`
-- `specflow/changes/<change-id>/tasks.md`
-- `specflow/changes/<change-id>/verification.md`
-- `specflow/changes/<change-id>/design.md`，如果存在
-- 目标 `specflow/specs/<capability>.md`
-- `specflow/roadmap.md`，如果 proposal.md 记录了 Roadmap 来源
+- 目标 `specflow/specs/<capability>.md`（capability 名称取自 spec-delta 中"目标主规约"节）
 
-## 长期文档校验
+### 规则
 
 ```text
-IF design.md 中 architecture_update = yes:
-  IF specflow/architecture.md 不存在或未包含已确认的系统边界图和系统架构图:
-    暂停并进入 System Architecture / ADR 阶段
-IF design.md 中 adr_needed = yes:
-  IF specflow/adr/ 不存在、对应 ADR 缺失，或没有记录已确认的长期技术决策:
-    暂停并进入 System Architecture / ADR 阶段
+IF specflow/specs/<capability>.md 不存在:
+   根据 spec-delta 中"目标主规约"节确定 capability 名称
+   用"新增需求"创建该文件
+   IF spec-delta 中存在修改需求 OR 删除需求 OR 重命名需求:
+       阻断 — 主 spec 缺失但 spec-delta 声称要修改/删除/重命名，数据不一致
+       暂停，询问用户：
+         a) spec-delta 写错了 → 回到 spec-delta 阶段修正
+         b) 主 spec 被误删了 → 恢复主 spec 后继续合并
+ELSE:
+   FOR EACH 新增需求:
+     添加到目标主 spec
+   FOR EACH 修改需求:
+     用完整更新后的需求块替换主 spec 中同名需求
+   FOR EACH 删除需求:
+     从主 spec 移除需求，需确保 spec-delta 记录了原因/迁移方案
+   FOR EACH 重命名需求:
+     在主 spec 中更新需求名称，保持场景内容一致
+   若执行完删除后主 spec 无剩余需求:
+     删除该主 spec 文件
 ```
 
-`specflow/architecture.md` 只记录系统边界图和系统架构图。`specflow/adr/` 记录不可逆或未来容易忘的长期决策及其理由。不得把未经 System Architecture / ADR 阶段确认的推断写入长期文档。
+> 若 spec-delta 中"目标主规约"节记录多个 capability，对每个分别执行以上规则。
 
-职责边界：系统架构和 ADR 的首次创建、后续更新、替代或废弃均在 System Architecture / ADR 阶段完成；Archive 不创建或修改长期文档，只校验长期文档已经反映已确认内容。
+### 阻断
 
-## Roadmap 同步
+```text
+IF spec-delta 中"目标主规约"节缺失或无法定位 capability 名称:
+   暂停询问
+IF spec-delta 无法无歧义合并到主 spec:
+   暂停，说明冲突并请求用户确认
+IF 主 spec 不存在且 spec-delta 含修改/删除/重命名需求:
+   暂停，数据不一致，询问用户修正方向
+```
+
+### 完成条件
+
+- 主 spec 反映本次变更后的系统行为
+- 若功能被完全移除，对应主 spec 文件已删除
+
+---
+
+## 2. 归档（Archiving）
+
+> 变更目录从活跃区移入历史区，封存为只读记录。
+
+### 输入
+
+- `specflow/changes/<change-id>/`（完整的变更工作目录）
+
+### 规则
+
+```text
+IF specflow/archive/ 不存在:
+   创建 specflow/archive/
+移动 specflow/changes/<change-id>/ → specflow/archive/<change-id>/
+```
+
+### 阻断
+
+```text
+IF 当前 change 目录中 verification.md 缺失:
+   暂停，重新执行 Apply 阶段
+IF verification Result = failed:
+   暂停，不归档
+IF verification Result = partial:
+   暂停，告知用户 verification.md 中已记录的风险，询问是否继续归档
+IF 当前 change 目录中 tasks.md 存在未完成任务且没有 Notes 说明例外:
+   暂停，完成任务或记录例外
+```
+
+### 完成条件
+
+- 变更目录已移入 `specflow/archive/<change-id>/`
+- 该 change 不再出现在 `specflow/changes/` 活跃变更列表中
+- 归档目录内容为只读历史记录，后续不得修改
+
+---
+
+## 3. 记账（Bookkeeping）
+
+> 关联的 roadmap 条目标记完成，版本管理提交封存（附带 change-id）。
+
+### 输入
+
+- `specflow/changes/<change-id>/proposal.md`（Roadmap 来源字段）
+- `specflow/roadmap.md`（若 proposal.md 记录了 Roadmap 来源）
+
+### 规则
+
+#### 3a. Roadmap 同步
 
 ```text
 IF proposal.md 的 Roadmap 来源 = 无:
-  不更新 specflow/roadmap.md
-ELSE IF specflow/roadmap.md 缺失:
-  暂停，询问用户是否创建 roadmap 或跳过同步
+   不更新 specflow/roadmap.md
+IF specflow/roadmap.md 缺失:
+   暂停，询问用户是否创建 roadmap 或跳过同步
 ELSE:
-  将 Roadmap 来源中的对应条目移入 已完成历史 顶部
-  标记为 [x]
-  追加完成日期、change-id 和归档摘要
+   将 Roadmap 来源中的对应条目移入"已完成历史"顶部
+   标记 [x]，追加完成日期、change-id 和归档摘要
+   只更新本 change 明确记录的来源项；不得整理、补写或改写其他 roadmap 条目
+   已完成历史除本次归档追加外只读
 ```
 
-只更新本 change 明确记录的来源项；不得整理、补写或改写其他 roadmap 条目。已完成历史除本次归档追加外只读。
-
-## 合并规则
+#### 3b. 版本管理封存
 
 ```text
-FOR EACH 新增需求:
-  添加到目标主 spec
-FOR EACH 修改需求:
-  用完整更新后的需求块替换主 spec 中同名需求
-FOR EACH 删除需求:
-  从主 spec 移除需求，并确保 spec-delta 记录原因 / 迁移方案
-FOR EACH 重命名需求:
-  在主 spec 中更新需求名称，并保持场景内容一致或按 patch 修改
+使用当前项目实际采用的版本管理工具封存归档结果
+提交或变更描述必须包含 `change-id: <change-id>`
+示例：
+  docs: archive workflow change
+
+  change-id: 2026-06-06-refine-workflow-skill-0
 ```
 
-## 阻断
+### 阻断
 
 ```text
-IF 当前 change 目录中的 verification.md 缺失:
-  暂停并进入 Verify 阶段
-ELSE IF verification Result = failed:
-  暂停，不归档
-ELSE IF 当前 change 目录中的 tasks.md 存在未完成任务且没有 Notes 说明例外:
-  暂停，完成任务或记录例外
-ELSE IF spec-delta 无法无歧义合并到主 spec:
-  暂停，说明冲突并请求用户确认
-ELSE IF design.md 标记 architecture_update = yes 但 architecture.md 缺失或未反映已确认内容:
-  暂停并进入 System Architecture / ADR 阶段
-ELSE IF design.md 标记 adr_needed = yes 但 ADR 缺失或未反映已确认决策:
-  暂停并进入 System Architecture / ADR 阶段
-ELSE IF proposal.md 记录 Roadmap 来源但无法在 specflow/roadmap.md 定位对应条目:
-  暂停，说明缺失项并询问用户是否跳过同步或手动指定条目
-ELSE IF 无法判断当前项目使用的版本管理工具:
-  暂停，读取项目规则或询问用户
+IF proposal.md 记录 Roadmap 来源但无法在 specflow/roadmap.md 定位对应条目:
+   暂停，说明缺失项，询问用户跳过同步或手动指定条目
+IF 无法判断当前项目使用的版本管理工具:
+   暂停，读取项目规则或询问用户
 ```
 
-## 完成条件
+### 完成条件
 
-- 主 spec 反映本次变更后的当前系统行为。
-- `specflow/architecture.md` 反映本次变更后的系统边界图和系统架构图，若 design 标记需要同步。
-- `specflow/adr/` 记录本次确认的长期技术决策，若 design 标记需要 ADR。
-- 变更目录保留为历史记录，不再修改。
-- 如果 proposal.md 记录 Roadmap 来源，`specflow/roadmap.md` 已将对应项移入已完成历史。
-- 归档结果已用当前项目版本管理工具封存，提交或变更描述包含 `change-id: <change-id>`。
-- 最终回复说明归档结果、更新的主 spec、验证摘要。
+- 若有关联 Roadmap 来源，`specflow/roadmap.md` 对应条目已移入完成历史
+- 版本管理已封存，提交描述包含 `change-id: <change-id>`
+
+---
+
+## 总完成条件
+
+1. 主 spec 反映本次变更后的系统行为（落账）
+2. 变更目录已移入 `specflow/archive/<change-id>/`（归档）
+3. 若有关联，roadmap 条目已标记完成（记账）
+4. 版本管理已封存，附 change-id（记账）
+5. 最终回复说明归档结果、更新的主 spec、验证摘要
+
+## 不做什么
+
+- 不创建或修改长期文档（architecture.md / ADR）
+- 不合并 `design.md`（design 随 change 目录归档，作为历史方案记录）
+- 不使用外部 archive 机制
+- 不整理/补写/改写其他 roadmap 条目

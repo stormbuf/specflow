@@ -444,13 +444,9 @@ erDiagram
 
 ## 9. System Architecture / ADR 影响
 
-architecture_update: <!-- yes | no -->
-
 需要进入 System Architecture / ADR 处理的系统边界图或系统架构图变更：
 
 - （无变更写「无」）
-
-adr_needed: <!-- yes | no -->
 
 需要进入 System Architecture / ADR 处理的 ADR 候选：
 

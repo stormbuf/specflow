@@ -17,8 +17,7 @@
 /specflow-workflow spec      # Spec Delta 阶段
 /specflow-workflow design    # Design 阶段
 /specflow-workflow tasks     # Tasks 阶段
-/specflow-workflow apply     # Apply 阶段
-/specflow-workflow verify    # Verify 阶段
+/specflow-workflow apply     # Apply 阶段（含验证）
 /specflow-workflow archive   # Archive 阶段
 ```
 
@@ -29,7 +28,7 @@
 完整变更流程：
 
 ```text
-版本规划 -> 提议讨论 -> 规约变更 -> 技术方案 -> 任务拆解 -> 执行 -> 验证 -> 归档
+版本规划 -> 提议讨论 -> 规约变更 -> 技术方案 -> 任务拆解 -> 执行（含验证） -> 归档
 ```
 
 版本规划使用单文件台账：
@@ -77,6 +76,12 @@ YYYY-MM-DD-short-slug-N
 specflow/specs/<capability>.md
 ```
 
+已归档变更存放在：
+
+```text
+specflow/archive/<change-id>/
+```
+
 ## 阶段定义
 
 - `roadmap.md`：规划台账和完成历史，维护 `🔥 正在进行`、`📋 下一批 (P0)`、`💡 远期 (P1/P2)` 和 `已完成历史`。
@@ -118,7 +123,7 @@ docs: archive workflow change
 change-id: 2026-06-06-refine-workflow-skill-0
 ```
 
-归档阶段不合并 `design.md`。`design.md` 归档后成为历史记录，用于解释当时为什么这样设计、排除了什么、识别了哪些风险。
+归档阶段不合并 `design.md`。整个 change 目录归档后移入 `specflow/archive/<change-id>/`，成为历史记录，用于解释当时为什么这样设计、排除了什么、识别了哪些风险。
 
 如果变更产生长期架构影响或长期技术决策，只更新对应长期文档：
 
@@ -135,7 +140,7 @@ adr/*.md         # 长期技术决策和约束
 - 测试是可执行行为证据。
 - `specflow/specs/` 是对外行为承诺。
 - `architecture.md` 和 `adr/` 是长期结构与决策约束。
-- `specflow/changes/<change-id>/design.md` 是历史方案记录，不是当前实现正确性的判定依据。
+- `specflow/archive/<change-id>/design.md` 是历史方案记录，不是当前实现正确性的判定依据。
 
 如果后续源码演进导致历史 `design.md` 过期，不回头维护历史 design：
 

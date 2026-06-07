@@ -1,6 +1,6 @@
 ---
 name: specflow-workflow
-description: "[SLASH-ONLY] specflow-workflow。仅在用户显式调用 /specflow-workflow 时激活；用于稳定执行 Roadmap、Proposal、Spec Delta、System Architecture / ADR、Design、Tasks、Apply、Verify 和 Archive 全流程。"
+description: "[SLASH-ONLY] specflow-workflow。仅在用户显式调用 /specflow-workflow 时激活；用于稳定执行 Roadmap、Proposal、Spec Delta、System Architecture / ADR、Design、Tasks、Apply（含验证）和 Archive 全流程。"
 metadata:
   version: "0.1.0"
   tags: "workflow,roadmap,spec,architecture,design,tasks,apply,archive"
@@ -8,7 +8,7 @@ metadata:
 
 # Specflow Workflow
 
-> AI 使用本 skill 执行独立的变更生命周期：版本规划 -> 提议讨论 -> 规约变更 -> 系统架构 / ADR -> 技术方案 -> 任务拆解 -> 执行 -> 验证 -> 归档。
+> AI 使用本 skill 执行独立的变更生命周期：版本规划 -> 提议讨论 -> 规约变更 -> 系统架构 / ADR -> 技术方案 -> 任务拆解 -> 执行（含验证） -> 归档。
 > 最高信条：阶段产物必须前后承接；执行阶段不得重新发明 proposal、spec-delta 或 design。
 >
 > 路径约定：`{SKILL_DIR}/` = 本 skill 所在目录，仅用于读取本 skill 自带的 `references/` 和 `assets/`；`{PROJECT_ROOT}/` = 用户调用 slash command 时的目标项目根目录。所有 `specflow/`、源码、测试、配置、版本管理路径均相对于 `{PROJECT_ROOT}/`，不得相对于 `{SKILL_DIR}/` 解析。
@@ -41,7 +41,6 @@ ELSE:
 | `/specflow-workflow design` | Design |
 | `/specflow-workflow tasks` | Tasks |
 | `/specflow-workflow apply` | Apply |
-| `/specflow-workflow verify` | Verify |
 | `/specflow-workflow archive` | Archive |
 | `/specflow-workflow` | 询问用户选择阶段 |
 
@@ -64,6 +63,12 @@ ELSE:
 {PROJECT_ROOT}/specflow/roadmap.md
 {PROJECT_ROOT}/specflow/architecture.md
 {PROJECT_ROOT}/specflow/adr/NNNN-short-title.md
+```
+
+已归档变更存放在：
+
+```text
+{PROJECT_ROOT}/specflow/archive/<change-id>/
 ```
 
 格式：
@@ -92,7 +97,7 @@ YYYY-MM-DD-short-slug-N
 specflow/specs/<capability>.md
 ```
 
-`spec-delta.md` 是本次规约变化；`{PROJECT_ROOT}/specflow/specs/<capability>.md` 是归档后的主 spec。`System Architecture / ADR` 负责系统边界图、系统架构图和 ADR 的首次创建、后续更新、替代或废弃；`design.md` 是本次功能设计工作台，只消费或请求更新系统架构和 ADR。Archive 不创建或修改长期文档，只校验长期文档已反映确认内容。
+`spec-delta.md` 是本次规约变化；`{PROJECT_ROOT}/specflow/specs/<capability>.md` 是归档后的主 spec。`System Architecture / ADR` 负责系统边界图、系统架构图和 ADR 的首次创建、后续更新、替代或废弃；`design.md` 是本次功能设计工作台，只消费或请求更新系统架构和 ADR。Archive 不创建或修改长期文档。
 
 ## 阶段路由
 
@@ -111,8 +116,6 @@ ELSE IF 参数 = tasks:
   执行 Tasks 阶段，详见 {SKILL_DIR}/references/tasks.md
 ELSE IF 参数 = apply:
   执行 Apply 阶段，详见 {SKILL_DIR}/references/apply.md
-ELSE IF 参数 = verify:
-  执行 Verify 阶段，详见 {SKILL_DIR}/references/verify.md
 ELSE IF 参数 = archive:
   执行 Archive 阶段，详见 {SKILL_DIR}/references/archive.md
 ELSE:
@@ -127,9 +130,8 @@ ELSE:
 4. System Architecture / ADR：固定先 ADR、后系统架构；当存在适用 ADR 的长期决策、缺少 architecture.md、系统边界图或系统架构图需要变化时，逐题讨论并按需更新长期文档；无改动则跳过，不硬改。
 5. Design：讨论并收敛本次实现方案，只消费系统架构和 ADR；发现缺失或需要长期决策时暂停并进入 System Architecture / ADR。
 6. Tasks：将方案拆成可独立验证的执行项。
-7. Apply：按 tasks.md 顺序执行并更新复选框。
-8. Verify：检查 tasks 是否有遗漏项没做，并记录归档前验证摘要。
-9. Archive：将 spec-delta 合并回主 spec，校验长期文档已反映 System Architecture / ADR / Design 确认内容，并冻结本次变更记录。
+7. Apply：按 tasks.md 顺序执行并更新复选框；所有任务完成后自动验证并产出 verification.md。
+8. Archive：落账（spec-delta → 主 spec）→ 归档（移入历史区）→ 记账（roadmap + 版本管理封存）。
 
 ## 前置条件
 
@@ -178,7 +180,11 @@ ELSE IF 阶段产物间发现冲突:
 - Design: `{SKILL_DIR}/assets/design.md`
 - Architecture: `{SKILL_DIR}/assets/architecture.md`
 - ADR: `{SKILL_DIR}/assets/adr.md`
-- Tasks: `{SKILL_DIR}/assets/tasks.md`
+- Tasks: `{SKILL_DIR}/assets/tasks.md`（索引）；按变更类型从以下选择：
+  - 功能性 → `{SKILL_DIR}/assets/tasks-functional.md`
+  - 非功能 → `{SKILL_DIR}/assets/tasks-nonfunctional.md`
+  - 基础设施 → `{SKILL_DIR}/assets/tasks-infra.md`
+  - 轻量 → `{SKILL_DIR}/assets/tasks-lightweight.md`
 - Verification: `{SKILL_DIR}/assets/verification.md`
 
 ## 关键约束
@@ -190,6 +196,6 @@ ELSE IF 阶段产物间发现冲突:
 5. `roadmap.md` 只维护规划台账和完成历史，不承载 proposal、design 或 tasks 细节。
 6. 执行阶段只按 `tasks.md` 推进，不重新设计需求或方案。
 7. Tasks 和 Apply 阶段每次运行都必须重新读取 `{SKILL_DIR}/assets/rules.md`，动态编排适用检查项，不复制或缓存规则正文。
-8. 验证主要检查 tasks 遗漏和例外；只记录结果摘要：passed / failed / partial、检查项和必要 notes。
+8. Apply 末尾必须执行验证并产出 verification.md；中断后重新运行 Apply 应跳过已完成任务并完成验证。
 9. 所有 UML 必须使用 Mermaid；系统架构只维护系统边界图和系统架构图。
 10. System Architecture / ADR 阶段固定先 ADR、后系统架构；系统架构和 ADR 必须逐个问题确认，每个问题给出调研后的 2-3 个方案、推荐方案，并保留用户自述选项；无改动则跳过，不硬改。
