@@ -44,8 +44,12 @@ IF 当前 change 目录中的 tasks.md 缺失:
   暂停并进入 Tasks 阶段
 ELSE IF proposal 的"是否需要规约"为 yes 但当前 change 目录中的 spec-delta.md 缺失:
   暂停并进入 Spec Delta 阶段
+ELSE IF proposal 的"是否需要规约"为 no 但当前 change 目录中的 spec-delta.md 存在:
+  暂停，数据不一致 — proposal 声明不需要规约但 spec-delta.md 已存在，修正 proposal 或移除多余文件
 ELSE IF proposal 的"是否需要技术方案"为 yes 但当前 change 目录中的 design.md 缺失:
   暂停并进入 Design 阶段
+ELSE IF proposal 的"是否需要技术方案"为 no 但当前 change 目录中的 design.md 存在:
+  暂停，数据不一致 — proposal 声明不需要技术方案但 design.md 已存在，修正 proposal 或移除多余文件
 ELSE IF 项目缺少 architecture.md，且本次变更需要生成代码或确定实现结构:
   暂停并进入 System Architecture / ADR 阶段
 ELSE IF 本次变更涉及 ADR 适用范围中的长期决策且对应 ADR 缺失:
@@ -59,6 +63,7 @@ ELSE:
 每个任务开始前，读取 `{SKILL_DIR}/assets/rules.md` 全文，按分类处理：
 
 - **检查项分类的规则** — 已在 tasks.md 中编排为任务项，按 tasks 顺序逐项执行。所有任务完成后，对照 rules.md 检查项逐条确认覆盖状态，结果写入 verification.md。
+- **多 Agent 策略分类的规则** — 执行策略，不在 tasks.md 中编排为任务项。Apply 阶段独立读取，作为 agent 调度决策依据。执行每个任务前，按 tasks.md 中的 agent 推荐标注和本分类中的策略，判断是否委托。
 - **编码原则分类的规则** — 不在 tasks.md 中生成任务项。编码、决策和自检时作为脑内规则实时遵循。
 
 Apply 不内联、不复制 rules.md 正文。始终以 rules.md 原文为单一真相源。
@@ -70,6 +75,22 @@ Apply 不内联、不复制 rules.md 正文。始终以 rules.md 原文为单一
 - 严格按 tasks.md 顺序推进，不跳过、不乱序。
 - 同一任务最多返修三轮；三轮后仍有问题则阻断，告知用户已尝试的方案和下一步选择。
 - 不获确认的情况下不继续执行；不自行假设需求、补充需求。
+
+### Agent 调度
+
+调度策略以 rules.md「多 Agent 策略」分类为准（Agent 角色、子项串行规则、测试分流、审查修复链、三轮上限）。本章节仅描述 Apply 阶段的执行规则。
+
+**执行规则：**
+
+1. 按 tasks.md 顺序遍历未完成任务，读取任务项的 agent 推荐标注，识别无依赖关系的任务组
+2. 无依赖任务组可并行委托，组内任务按顺序串行
+3. 标注匹配 + 平台支持 → 委托对应 agent；否则编排器自行执行
+4. 测试任务：agent 产出后立即执行验证，失败按 rules.md 子项串行规则分流修复后重跑
+5. 审查任务：审查发现问题 → 退回代码生成 agent 修复 → 重走测试→审查流程
+6. 非测试非审查任务（含安全扫描）：验证产出满足 tasks.md 和 rules.md 约束，不满足修正
+7. 每轮完成后更新 tasks.md 复选框；超过三轮上限时按执行纪律（本文件 L76）阻断处理
+
+**降级：** 按 agent 粒度降级——每个任务项对应 agent 可用则委托，不可用则编排器自行执行。不因单个 agent 不可用而全局降级。
 
 ### 沟通边界
 

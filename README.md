@@ -19,6 +19,9 @@
 /specflow-workflow tasks     # Tasks 阶段
 /specflow-workflow apply     # Apply 阶段（含验证）
 /specflow-workflow archive   # Archive 阶段
+/specflow-workflow arch      # System Architecture / ADR 阶段
+/specflow-workflow architecture  # System Architecture / ADR 阶段
+/specflow-workflow adr       # System Architecture / ADR 阶段
 ```
 
 单独输入 `/specflow-workflow` 时，应先询问用户选择阶段。
@@ -28,7 +31,7 @@
 完整变更流程：
 
 ```text
-版本规划 -> 提议讨论 -> 规约变更 -> 技术方案 -> 任务拆解 -> 执行（含验证） -> 归档
+版本规划 -> 提议讨论 -> 规约变更 -> 系统架构 / ADR -> 技术方案 -> 任务拆解 -> 执行（含验证） -> 归档
 ```
 
 版本规划使用单文件台账：
@@ -85,13 +88,52 @@ specflow/archive/<change-id>/
 ## 阶段定义
 
 - `roadmap.md`：规划台账和完成历史，维护 `🔥 正在进行`、`📋 下一批 (P0)`、`💡 远期 (P1/P2)` 和 `已完成历史`。
-- `proposal.md`：提议讨论结果，明确为什么做、范围、非范围、变更类型、是否需要规约和技术方案。
+- `proposal.md`：提议讨论结果，明确为什么做、范围、非范围、变更类型（`functional` / `nonfunctional` / `infrastructure` / `lightweight`）、是否需要规约和技术方案。
 - `spec-delta.md`：本次规约变更，描述对系统可观察行为的新增、修改、删除或重命名。
+- `architecture.md` + `adr/`：系统边界图、系统架构图（Mermaid UML）和长期技术决策。
 - `design.md`：本次变更的技术方案，说明实现方式、接口、数据流、风险、迁移和验证策略。
-- `tasks.md`：可独立验证的执行清单。
+- `tasks.md`：可独立验证的执行清单，按变更类型从四种分组模板生成。
 - `verification.md`：验证结果摘要，只记录 `passed | failed | partial`、检查项和必要 notes。
 
-Proposal 不强依赖 Roadmap。若 `roadmap.md` 存在待实现项，Proposal 阶段会先询问是否从 Roadmap 选择本次执行项；选择后写入 `proposal.md` 的 `Roadmap 来源` 字段。Archive 阶段会按该来源将对应条目移入 Roadmap 的已完成历史。
+Proposal 不强依赖 Roadmap。若 `roadmap.md` 存在待实现项，Proposal 阶段会先询问是否从 Roadmap 选择本次执行项；选择后写入 `proposal.md` 的 `Roadmap 来源` 字段，同时自动将对应条目移入 Roadmap 的 `🔥 正在进行`。Archive 阶段会按该来源将对应条目移入完成历史。
+
+## 核心概念映射
+
+### 定义
+
+| 概念 | 是什么 | 物理位置 |
+|------|--------|----------|
+| **capability** | 系统的一项独立可观察能力 | `specflow/specs/<capability>.md` |
+| **change** | 一次变更生命周期（从 proposal 到 archive） | `specflow/changes/<change-id>/` |
+| **spec-delta** | 本次 change 对 capability 的规约增量 | `specflow/changes/<change-id>/spec-delta.md` |
+
+### 基数关系
+
+**change : spec-delta = 1 : 0..1**
+- 一个 change 最多一份 spec-delta（只有 proposal 声明"是否需要规约 = yes"时才有）
+- `lightweight` 类变更通常不改变可观察行为，不产生 spec-delta
+
+**spec-delta : capability = N : M**
+- 一份 spec-delta 可修改多个 capability（"目标主规约"节可列出多个 `<capability>.md`）
+- 一个 capability 可被多份 spec-delta 修改（不同 change 在不同时间点修改同一个能力）
+- Archive 阶段按 capability 逐一合并
+
+### 典型映射范式
+
+| 范式 | 关系 | 场景 |
+|------|------|------|
+| 1:1:1 | change → spec-delta → 1 个 capability | 最常见的单一功能变更 |
+| 1:1:N | change → spec-delta → N 个 capability | 功能链，一个变更同时修改多个能力 |
+| 多:多:1 | N 个 change → N 份 spec-delta → 1 个 capability | 一个能力经过多次变更增量演进 |
+
+### 功能链如何拆解 capability
+
+当一个功能链同时涉及核心功能和若干子功能时，按以下标准决定合为一个 capability 还是拆为多个：
+
+- **合**：子功能离开核心功能就没有独立意义（如"导出格式选择"只为"导出"服务）
+- **拆**：子功能可被其他 capability 独立消费、独立演进、独立验收（如"权限校验"可被"导入"、"报表"等多种能力复用）
+
+capability 划分由 proposal 阶段的苏格拉底追问确定，与 change 和 spec-delta 的对应关系无关——spec-delta 只管"这次改了哪些 capability"。
 
 ## 项目级安装包装
 

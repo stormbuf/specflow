@@ -24,16 +24,14 @@
 
 ## 变更类型与分组选型
 
-读取 proposal.md 中声明的变更类型，按以下映射选择分组模板：
+proposal 变更类型直接对应任务分组，无需映射：
 
-| proposal 变更类型 | 分组 | 模板 |
-|------|------|------|
-| 新功能 / 功能修改 / 功能移除 / Bug 修复 | 功能性 | `{SKILL_DIR}/assets/tasks-functional.md` |
-| 性能优化 / 安全加固 / 重构 / 技术债清理 / 可观测性 / 可靠性提升 | 非功能 | `{SKILL_DIR}/assets/tasks-nonfunctional.md` |
-| 框架升级 / 数据库迁移 / 依赖升级 / CI 调整 / 容器化 / 配置变更 | 基础设施 | `{SKILL_DIR}/assets/tasks-infra.md` |
-| 文档 / 测试补充 / 合规调整 / License | 轻量 | `{SKILL_DIR}/assets/tasks-lightweight.md` |
-
-若 proposal 中的变更类型无法明确映射到以上四类，暂停并询问用户。
+| proposal 变更类型 | 模板 |
+|---|---|
+| `functional` | `{SKILL_DIR}/assets/tasks-functional.md` |
+| `nonfunctional` | `{SKILL_DIR}/assets/tasks-nonfunctional.md` |
+| `infrastructure` | `{SKILL_DIR}/assets/tasks-infra.md` |
+| `lightweight` | `{SKILL_DIR}/assets/tasks-lightweight.md` |
 
 ## 拆解规则
 
@@ -65,6 +63,8 @@ IF rules.md 与 proposal、spec-delta 或 design 冲突:
 ```
 
 模板骨架定义了任务排列顺序，rules 检查项通过 Given 条件自行判断是否适用、落在骨架的哪个位置。拆解时不硬编码规则类型。
+
+> 多 Agent 策略是执行策略而非检查项。该分类无 Given/When/Then 结构，Tasks 阶段不会在其上编排任务项。Apply 阶段独立读取该分类进行 agent 调度，详见 rules.md §多 Agent 策略说明。
 
 ## 默认任务分组
 

@@ -22,7 +22,7 @@
 
 ## 变更类型
 
-<!-- tiny | functional | bugfix | infrastructure | architecture | foundation | documentation -->
+<!-- functional | nonfunctional | infrastructure | lightweight -->
 
 ## 是否需要规约
 
@@ -36,7 +36,7 @@
 
 理由：
 
-## 目标能力
+## 目标主规约
 
 <!-- 当“是否需要规约”为 yes 时，列出 specflow/specs/<capability>.md。 -->
 
