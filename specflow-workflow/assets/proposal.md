@@ -38,9 +38,13 @@
 
 ## 目标主规约
 
-<!-- 当“是否需要规约”为 yes 时，列出 specflow/specs/<capability>.md。 -->
+<!-- 当"是否需要规约"为 yes 时，列出目标 capability 文件。
+  文件可以不存在——第一次定义能力时 Archive 会自动创建。
+  多个时可换行追加多个条目。
 
-- 
+  AI 会扫描 specflow/specs/ 下已有主 spec 并推荐匹配。找不到匹配时建议新建。 -->
+
+-
 
 ## 影响面
 

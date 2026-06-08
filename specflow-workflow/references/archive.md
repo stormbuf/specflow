@@ -29,13 +29,16 @@ IF specflow/specs/<capability>.md 不存在:
          a) spec-delta 写错了 → 回到 spec-delta 阶段修正
          b) 主 spec 被误删了 → 恢复主 spec 后继续合并
 ELSE:
-   FOR EACH 新增需求:
+   从 spec-delta 中筛选"目标主规约"标注为当前 capability 的需求（若 spec-delta 仅声明一个 capability，所有未标注的需求默认归属于它）
+   IF 无归属当前 capability 的需求:
+     跳过（该 capability 本次无变更）
+   FOR EACH 筛选后的新增需求:
      添加到目标主 spec
-   FOR EACH 修改需求:
+   FOR EACH 筛选后的修改需求:
      用完整更新后的需求块替换主 spec 中同名需求
-   FOR EACH 删除需求:
+   FOR EACH 筛选后的删除需求:
      从主 spec 移除需求，需确保 spec-delta 记录了原因/迁移方案
-   FOR EACH 重命名需求:
+   FOR EACH 筛选后的重命名需求:
      在主 spec 中更新需求名称，保持场景内容一致
    若执行完删除后主 spec 无剩余需求:
      删除该主 spec 文件
