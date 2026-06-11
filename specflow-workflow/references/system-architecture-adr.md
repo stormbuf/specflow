@@ -23,13 +23,19 @@ ELSE IF 本次变更涉及 ADR 适用范围中的长期决策:
 
 ## 输入
 
-- 用户原始需求和当前对话中已确认的技术偏好。
-- 从 `{PROJECT_ROOT}/specflow/changes/` 子目录确定当前 change-id，读取以下产物（若存在）
-- `{PROJECT_ROOT}/specflow/changes/<change-id>/proposal.md`，如果存在。
-- `{PROJECT_ROOT}/specflow/changes/<change-id>/spec-delta.md`，如果存在。
-- `{PROJECT_ROOT}/specflow/changes/<change-id>/design.md`，如果存在 — 了解 Design 阶段已识别的架构影响和 ADR 候选
-- 已有 `specflow/architecture.md` 和 `specflow/adr/`，如果存在。
-- 源码、manifest、测试配置、部署配置和项目文档事实。
+执行本阶段前，必须先加载以下输入：
+
+1. 用户原始需求和技术偏好 — 从当前对话、proposal.md、spec-delta.md 中获取；如上述都没有，主动询问用户
+2. 从 `{PROJECT_ROOT}/specflow/changes/` 确定 change-id（前置条件已完成）
+3. **读取以下文件**（如存在）：
+   - `{PROJECT_ROOT}/specflow/changes/<change-id>/proposal.md`
+   - `{PROJECT_ROOT}/specflow/changes/<change-id>/spec-delta.md`
+   - `{PROJECT_ROOT}/specflow/changes/<change-id>/design.md` — **必读，关注 §9 架构影响和 ADR 候选**
+   - `{PROJECT_ROOT}/specflow/architecture.md`
+   - `{PROJECT_ROOT}/specflow/adr/` 目录下的 ADR 文件
+4. 项目源码、manifest、测试配置、部署配置和文档（按需）
+
+完成输入加载后，进入固定顺序。
 
 ## 输出
 
@@ -39,8 +45,24 @@ ELSE IF 本次变更涉及 ADR 适用范围中的长期决策:
 ## 固定顺序
 
 ```text
-先读取 design.md（如存在），提取 §9 中已识别的架构影响和 ADR 候选
-将这些与 proposal、spec-delta、用户原话合并，形成问题队列
+第一步：验证 design.md 已读取（阻断级先决）
+
+IF {PROJECT_ROOT}/specflow/changes/<change-id>/design.md 文件存在:
+  确认该文件已在"输入"步骤中读取
+  IF 未读取:
+    立即读取该文件全文
+    在读取完成之前，不得执行后续任何步骤
+  从已读取内容中提取 §9「架构影响」到工作记忆
+ELSE:
+  确认该文件不存在，继续
+
+第二步：形成问题队列
+
+从 design.md §9（如已读取）、proposal、spec-delta、用户原话中提取架构影响和 ADR 候选
+合并成问题队列
+
+第三步：处理 ADR 问题队列
+
 先处理 ADR 问题队列
 IF 本次没有 ADR 适用范围内的新增、替代或废弃决策:
   记录“ADR 无变动”，跳过 ADR 写入

@@ -13,7 +13,7 @@
 
 ## 输入
 
-- `{SKILL_DIR}/assets/rules.md`，每次进入 Tasks 阶段时重新读取
+- `{SKILL_DIR}/assets/rules.md` — skill 自带的检查约束和编码原则，本阶段必读。`{SKILL_DIR}` 指本 skill 安装目录下的 assets/
 - `specflow/changes/<change-id>/proposal.md`
 - `specflow/changes/<change-id>/spec-delta.md`，如果存在
 - `specflow/changes/<change-id>/design.md`，如果存在
@@ -35,7 +35,16 @@ proposal 变更类型直接对应任务分组，无需映射：
 
 ## 拆解规则
 
-先读取 `{SKILL_DIR}/assets/rules.md`，然后按以下流程执行：
+第一步：验证 rules.md 已读取（阻断级先决）
+
+```text
+确认 `{SKILL_DIR}/assets/rules.md` 已在"输入"步骤中读取
+IF 未读取:
+  立即读取该文件全文
+  在读取完成之前，不得执行后续任何步骤
+```
+
+第二步：按以下流程拆解任务
 
 ```text
 读取 proposal.md，确定变更类型和对应的分组模板

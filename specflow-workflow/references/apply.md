@@ -14,12 +14,25 @@
 
 ## 输入
 
-- `{SKILL_DIR}/assets/rules.md`，每次进入 Apply 阶段和每个任务开始前重新读取
+- `{SKILL_DIR}/assets/rules.md` — skill 自带的检查约束和 Agent 策略，本阶段每个任务开始前必读。`{SKILL_DIR}` 指本 skill 安装目录下的 assets/
 - `specflow/changes/<change-id>/proposal.md`
 - `specflow/changes/<change-id>/tasks.md`
 - `specflow/changes/<change-id>/spec-delta.md`，如果存在
 - `specflow/changes/<change-id>/design.md`，如果存在
 - 相关主 spec、源码和测试
+
+## 前置
+
+进入本阶段后，第一件事必须是读取 rules.md 并提取多 Agent 策略：
+
+```text
+确认 `{SKILL_DIR}/assets/rules.md` 已读取
+IF 未读取:
+  立即读取该文件全文
+  在读取完成之前，不得执行后续任何步骤
+从 rules.md 中提取「多 Agent 策略」分类的全部规则到工作记忆
+在执行每个任务前，依据此策略判断是否委托 agent
+```
 
 ## 中断恢复
 
@@ -155,3 +168,4 @@ ELSE:
 - 适用测试已运行；无法运行时记录原因。
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/tasks.md` 对应复选框已更新。
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/verification.md` 存在，Result 不为空。
+- **已依据 rules.md「多 Agent 策略」判断并执行 agent 委托（如适用）**；降级时按 agent 粒度处理，不全局降级。
