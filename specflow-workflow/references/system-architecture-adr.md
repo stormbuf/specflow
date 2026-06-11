@@ -24,9 +24,10 @@ ELSE IF 本次变更涉及 ADR 适用范围中的长期决策:
 ## 输入
 
 - 用户原始需求和当前对话中已确认的技术偏好。
-- `specflow/changes/<change-id>/proposal.md`，如果存在。
-- `specflow/changes/<change-id>/spec-delta.md`，如果存在。
-- `specflow/changes/<change-id>/design.md`，如果存在 — 了解 Design 阶段已识别的架构影响和 ADR 候选
+- 从 `{PROJECT_ROOT}/specflow/changes/` 子目录确定当前 change-id，读取以下产物（若存在）
+- `{PROJECT_ROOT}/specflow/changes/<change-id>/proposal.md`，如果存在。
+- `{PROJECT_ROOT}/specflow/changes/<change-id>/spec-delta.md`，如果存在。
+- `{PROJECT_ROOT}/specflow/changes/<change-id>/design.md`，如果存在 — 了解 Design 阶段已识别的架构影响和 ADR 候选
 - 已有 `specflow/architecture.md` 和 `specflow/adr/`，如果存在。
 - 源码、manifest、测试配置、部署配置和项目文档事实。
 
@@ -133,6 +134,16 @@ IF ADR 无变动或系统架构无变动:
 IF 存在未确认问题:
   暂停，不写入长期文档
 ```
+
+## 审查
+
+architecture.md 或 ADR 写入后，按 SKILL.md「阶段产出物审查」启动独立审查-修复-审查循环（最多三轮），委托审查 agent 检查：
+- Mermaid UML 语法正确性、节点和边的完整性
+- ADR 逐题确认记录是否可追溯
+- 各方案达成理由与放弃理由是否充分
+- 技术栈 ADR 是否逐项评估（业务匹配、硬约束、生态、集成、运维、安全、迁移）
+
+审查通过后方可进入下一阶段。三轮后仍有问题标注为已知问题继续。
 
 ## 完成条件
 

@@ -145,13 +145,13 @@ IF 用户提供 change-id:
   如果目录存在，读取该目录下阶段产物并继续
   如果目录不存在，暂停并报告已检查的绝对路径，不创建同名变更
 ELSE IF {PROJECT_ROOT}/specflow/changes/ 下已有变更且用户未指定 change-id:
-   列出 {PROJECT_ROOT}/specflow/changes/ 下所有子目录作为候选 change-id，询问用户选择
-   除非当前阶段明确要创建新变更
-   注意：列出时确保能匹配子目录——部分 glob 的 * 不匹配子目录，会导致误判为"无现存变更"
+    列出 {PROJECT_ROOT}/specflow/changes/ 下所有子目录作为候选 change-id，询问用户选择
+    除非当前阶段明确要创建新变更
+    列出时必须遍历目录内容获取子目录名；不要用通配符匹配子目录（通配符可能只匹配文件，导致误判为"无现存变更"）。
 ELSE IF 目标项目没有 {PROJECT_ROOT}/specflow/changes/<change-id>/ 且需要创建变更:
    使用当前日期生成 YYYY-MM-DD-short-slug-N 格式 change-id
    short-slug 使用 2-5 个英文 kebab-case 单词概括变更主题
-   N 从 0 开始，只有同日期、同 short-slug 已存在时才递增（检查已有变更时同样注意上述子目录匹配陷阱）
+     N 从 0 开始，只有同日期、同 short-slug 已存在时才递增（检查已有变更时同样不要用通配符，需遍历目录内容获取子目录名）
    创建 {PROJECT_ROOT}/specflow/changes/<change-id>/
 ELSE IF change-id 尚未确定:
    以上各分支均未命中意味着 change-id 仍为空。不得在不经用户确认和不读取 specflow/changes/ 目录的情况下跳过或猜测 change-id。必须明确询问用户要操作的 change-id（列出现有变更供选择，或允许创建新变更）。
@@ -160,6 +160,46 @@ ELSE IF 阶段需要读取上游产物但文件缺失:
 ELSE:
   读取当前阶段需要的文件并继续
 ```
+
+## 阶段产出物审查
+
+Proposal、Spec Delta、System Architecture / ADR、Design、Tasks 五个阶段在输出产物文档后，须启动独立审查-修复-审查循环，最多三轮。
+
+### 审查范围
+
+| 阶段 | 审查产物 | 审查重点 |
+|---|---|---|
+| Proposal | `proposal.md` | 范围/非范围是否明确、变更类型结论及理由是否充分、是否有无事实来源的断言、阻断性开放问题是否已解决 |
+| Spec Delta | `spec-delta.md` | 场景 Given/When/Then 可验证性、与 proposal 范围一致性、归属标注完整性、开放问题是否已分类 |
+| System Architecture / ADR | `architecture.md` / `adr/*.md` | Mermaid UML 正确性、ADR 逐题确认记录、方案达成与放弃理由、技术栈评估完整性 |
+| Design | `design.md` | 与 spec-delta 行为一致性、八维覆盖完整性、模块分层清晰、数据设计完整、错误码不少于 5 个 |
+| Tasks | `tasks.md` | 覆盖 spec-delta 和 design 约束、任务顺序依赖正确、验证任务存在、按 rules.md 编排检查项 |
+
+### 审查流程
+
+```text
+1. 审查 — 委托审查 agent 读取产物文档，逐项检查审查重点，输出问题清单（如有）
+2. 修复 — 按问题清单逐项修复产物文档
+3. 再审查 — 审查 agent 再次检查，确认问题已修复或发现新问题
+4. 最多迭代 3 轮
+IF 3 轮内所有问题修复:
+   确认产物质量通过，进入下一阶段
+ELSE IF 3 轮后仍存在未解决问题:
+   将剩余问题标注为已知问题，写入产物文档末尾的「已知问题」节
+   继续进入下一阶段，不无限循环
+ELSE IF 审查无问题:
+   直接通过
+```
+
+### 审查委托
+
+审查时必须委托审查 agent，不得自行审查。审查 agent 的 prompt 须包含：
+- 产物文件路径
+- 当前阶段名称
+- 审查重点清单
+- 上一轮问题清单（第 2、3 轮时）
+
+审查 agent 返回结果须区分：无问题 / 有问题（列出逐条问题及严重程度：阻断/建议）。
 
 ## 阻断条件
 
@@ -203,3 +243,4 @@ ELSE IF 阶段产物间发现冲突:
 8. Apply 末尾必须执行验证并产出 verification.md；中断后重新运行 Apply 应跳过已完成任务并完成验证。
 9. 所有 UML 必须使用 Mermaid；系统架构只维护系统边界图和系统架构图。
 10. System Architecture / ADR 阶段固定先 ADR、后系统架构；系统架构和 ADR 必须逐个问题确认，每个问题给出调研后的 2-3 个方案、推荐方案，并保留用户自述选项；无改动则跳过，不硬改。
+11. Proposal、Spec Delta、System Architecture / ADR、Design、Tasks 阶段产出文档后，必须通过独立审查-修复-审查循环（最多三轮），不得未经审查直接进入下一阶段。

@@ -99,6 +99,16 @@ IF rules.md 与 proposal、spec-delta 或 design 冲突:
 1. 执行 — 完成单一任务
 2. 验证 — 确认完成、汇总结果
 
+## 审查
+
+tasks.md 写入后，按 SKILL.md「阶段产出物审查」启动独立审查-修复-审查循环（最多三轮），委托审查 agent 检查：
+- 任务是否覆盖 spec-delta 和 design 的关键约束
+- 任务顺序是否符合依赖关系
+- 是否按 rules.md 编排适用的检查、测试、审查和质量门禁任务
+- 验证任务是否存在
+
+审查通过后方可进入 Apply 阶段。三轮后仍有问题标注为已知问题继续。
+
 ## 完成条件
 
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/tasks.md` 存在。

@@ -223,6 +223,16 @@ ELSE IF spec-delta 包含没有事实来源的新业务约束且影响 Given / W
    暂停，移入阻断性开放问题并使用苏格拉底追问询问用户
 ```
 
+## 审查
+
+spec-delta.md 写入后，按 SKILL.md「阶段产出物审查」启动独立审查-修复-审查循环（最多三轮），委托审查 agent 检查：
+- 场景 Given/When/Then 可验证性
+- 与 proposal 范围一致性
+- 归属标注完整性
+- 开放问题是否已分类（阻断/记录）
+
+审查通过后方可进入下一阶段。三轮后仍有问题标注为已知问题继续。
+
 ## 完成条件
 
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/spec-delta.md` 存在。
