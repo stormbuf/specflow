@@ -1,8 +1,8 @@
 # Apply Stage
 
-本文件定义执行阶段。Apply 只执行已确认的 tasks.md，不重新发明 proposal、spec-delta 或 design。所有 tasks 完成后自动验证并产出 verification.md。
+本文件定义执行阶段。Apply 是忠实执行器：只执行已确认的 tasks.md，不重新发明 proposal、spec-delta 或 design，不独立推导调度逻辑。所有 tasks 完成后自动验证并产出 verification.md。
 
-路径锚定：本文件中的 `specflow/`、源码、测试和项目命令路径均相对于 `{PROJECT_ROOT}/`；只有 `{SKILL_DIR}/assets/rules.md` 来自 skill 目录。
+路径锚定：本文件中的 `specflow/`、源码、测试和项目命令路径均相对于 `{PROJECT_ROOT}/`。
 
 ## 目标
 
@@ -14,24 +14,24 @@
 
 ## 输入
 
-- `{SKILL_DIR}/assets/rules.md` — skill 自带的检查约束和 Agent 策略，本阶段每个任务开始前必读。`{SKILL_DIR}` 指本 skill 安装目录下的 assets/
+- `specflow/changes/<change-id>/tasks.md` — Apply 推进的核心清单，含勾选框状态、Agent 标注、covers 字段、[SKIP] 标记
 - `specflow/changes/<change-id>/proposal.md`
-- `specflow/changes/<change-id>/tasks.md`
 - `specflow/changes/<change-id>/spec-delta.md`，如果存在
 - `specflow/changes/<change-id>/design.md`，如果存在
 - 相关主 spec、源码和测试
 
 ## 前置
 
-进入本阶段后，第一件事必须是读取 rules.md 并提取多 Agent 策略：
+进入本阶段后，第一件事是读取 tasks.md 并一次性提取执行契约到工作记忆：
 
 ```text
-确认 `{SKILL_DIR}/assets/rules.md` 已读取
-IF 未读取:
-  立即读取该文件全文
-  在读取完成之前，不得执行后续任何步骤
-从 rules.md 中提取「多 Agent 策略」分类的全部规则到工作记忆
-在执行每个任务前，依据此策略判断是否委托 agent
+读取 tasks.md 全文
+提取执行契约到工作记忆：
+  - 任务顺序与分组
+  - 每个任务项的 agent 标注
+  - 子项内串行约束（顺序由各族拓扑定义，已在 tasks.md 落地）
+  - 各 section 的启用 / [SKIP] 状态
+后续任务执行引用工作记忆，不重读外部规则文件。
 ```
 
 ## 中断恢复
@@ -55,31 +55,13 @@ ELSE:
 ```text
 IF 当前 change 目录中的 tasks.md 缺失:
   暂停并进入 Tasks 阶段
-ELSE IF proposal 的"是否需要规约"为 yes 但当前 change 目录中的 spec-delta.md 缺失:
-  暂停并进入 Spec Delta 阶段
-ELSE IF proposal 的"是否需要规约"为 no 但当前 change 目录中的 spec-delta.md 存在:
-  暂停，数据不一致 — proposal 声明不需要规约但 spec-delta.md 已存在，修正 proposal 或移除多余文件
-ELSE IF proposal 的"是否需要技术方案"为 yes 但当前 change 目录中的 design.md 缺失:
-  暂停并进入 Design 阶段
-ELSE IF proposal 的"是否需要技术方案"为 no 但当前 change 目录中的 design.md 存在:
-  暂停，数据不一致 — proposal 声明不需要技术方案但 design.md 已存在，修正 proposal 或移除多余文件
-ELSE IF 项目缺少 architecture.md，且本次变更需要生成代码或确定实现结构:
-  暂停并进入 System Architecture / ADR 阶段
-ELSE IF 本次变更涉及 ADR 适用范围中的长期决策且对应 ADR 缺失:
-   暂停并进入 System Architecture / ADR 阶段
 ELSE:
-  阅读 rules.md 和所有相关阶段产物，并按中断恢复逻辑执行
+  按 SKILL.md「阶段进入条件」全局门禁做一致性核对（不重复 Tasks 已完成的校验）：
+    IF proposal/spec-delta/design/architecture 与 tasks.md 声明的任务族不一致:
+      暂停，修正不一致后继续
+    ELSE:
+      按中断恢复逻辑执行
 ```
-
-## 规则内化
-
-每个任务开始前，读取 `{SKILL_DIR}/assets/rules.md` 全文，按分类处理：
-
-- **检查项分类的规则** — 已在 tasks.md 中编排为任务项，按 tasks 顺序逐项执行。所有任务完成后，对照 rules.md 检查项逐条确认覆盖状态，结果写入 verification.md。
-- **多 Agent 策略分类的规则** — 执行策略，不在 tasks.md 中编排为任务项。Apply 阶段独立读取，作为 agent 调度决策依据。执行每个任务前，按 tasks.md 中的 agent 推荐标注和本分类中的策略，判断是否委托。
-- **编码原则分类的规则** — 不在 tasks.md 中生成任务项。编码、决策和自检时作为脑内规则实时遵循。
-
-Apply 不内联、不复制 rules.md 正文。始终以 rules.md 原文为单一真相源。
 
 ## 执行纪律
 
@@ -91,17 +73,17 @@ Apply 不内联、不复制 rules.md 正文。始终以 rules.md 原文为单一
 
 ### Agent 调度
 
-调度策略以 rules.md「多 Agent 策略」分类为准（Agent 角色、子项串行规则、测试分流、审查修复链、三轮上限）。本章节仅描述 Apply 阶段的执行规则。
+调度依据是 tasks.md 中已编排的 agent 标注和串行约束。Tasks 阶段已将 Agent 角色、串行顺序、降级规则编进 tasks.md；Apply 只执行，不推导。
 
 **执行规则：**
 
-1. 按 tasks.md 顺序遍历未完成任务，读取任务项的 agent 推荐标注，识别无依赖关系的任务组
-2. 无依赖任务组可并行委托，组内任务按顺序串行
-3. 标注匹配 + 平台支持 → 委托对应 agent；否则编排器自行执行
-4. 测试任务：agent 产出后立即执行验证，失败按 rules.md 子项串行规则分流修复后重跑
-5. 审查任务：审查发现问题 → 退回代码生成 agent 修复 → 重跑当前子项的安全扫描→测试→审查
-6. 非测试非审查任务（含安全扫描）：验证产出满足 tasks.md 和 rules.md 约束，不满足修正
-7. 每轮完成后更新 tasks.md 复选框；超过三轮上限时按执行纪律（本文件 L76）阻断处理
+1. 按 tasks.md 顺序遍历未完成任务，读取任务项的 agent 标注。
+2. 无依赖子项组可并行委托；组内任务按顺序串行（顺序由各族拓扑定义，已在 tasks.md 落地）。
+3. 标注匹配 + 平台支持 → 委托对应 agent；否则编排器自行执行。
+4. 测试任务：agent 产出后立即执行验证。失败时按常识分流（测试代码问题→测试 agent 修复；实现 bug→退回代码生成 agent 修复→重跑安全扫描→重跑测试）。修复后重跑，最多三轮，超出阻断。
+5. 审查任务：审查发现问题 → 退回代码生成 agent 修复 → 重跑当前子项的安全扫描→测试→审查。最多三轮，超出阻断。
+6. 非测试非审查任务（含安全扫描）：验证产出满足 tasks.md 约束，不满足则修正。
+7. 每轮完成后更新 tasks.md 复选框；超过三轮上限时按「工作方式」阻断处理。
 
 **降级：** 按 agent 粒度降级——每个任务项对应 agent 可用则委托，不可用则编排器自行执行。不因单个 agent 不可用而全局降级。
 
@@ -126,7 +108,7 @@ Apply 不内联、不复制 rules.md 正文。始终以 rules.md 原文为单一
 ```text
 IF tasks.md 存在未完成复选框且没有备注说明例外:
   Result = failed，需要完成缺失项或记录例外
-ELSE IF tasks.md 未覆盖 proposal、spec-delta 或 design 的关键约束:
+ELSE IF tasks.md 子项 covers 字段未覆盖 spec-delta 全部需求 或 design 全部关键约束:
   Result = failed，需要补齐遗漏项
 ELSE IF tasks.md 中验证项缺少结果记录:
   补齐检查结果；无法补齐时记录原因
@@ -162,10 +144,9 @@ ELSE:
 ## 完成条件
 
 - 当前任务的代码和文档改动完成。
-- 如果本次变更需要生成代码或确定实现结构，architecture.md 已存在；涉及 ADR 时对应 ADR 已存在。
-- 如果 design.md §9 包含架构变更或 ADR 候选描述，对应 System Architecture / ADR 已完成。
-- 已按当前 `{SKILL_DIR}/assets/rules.md` 完成本轮适用检查，或记录 `[SKIP]` 原因。
+- architecture/ADR gate 由 SKILL.md 全局门禁统一校验，本文件不重复。
+- 已按 tasks.md 启用的 section 完成本轮适用检查，或记录 `[SKIP]` 原因。
 - 适用测试已运行；无法运行时记录原因。
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/tasks.md` 对应复选框已更新。
 - `{PROJECT_ROOT}/specflow/changes/<change-id>/verification.md` 存在，Result 不为空。
-- **已依据 rules.md「多 Agent 策略」判断并执行 agent 委托（如适用）**；降级时按 agent 粒度处理，不全局降级。
+- 已按 tasks.md agent 标注执行委托（如适用）；降级时按 agent 粒度处理，不全局降级。

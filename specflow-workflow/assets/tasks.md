@@ -1,10 +1,8 @@
 # 任务模板
 
-> 按变更类型选择对应模板。由 Tasks 阶段自动选型。
+> 统一模板入口。Tasks 阶段读取 `tasks-template.md`，按其「上游产物依赖表」选择任务族，整块装配。
+> 不再按变更类型分文件选型——四族（功能/优化/迁移/轻量）共用同一模板，通过任务族插槽整块替换。
 
-| 变更类型 | 模板文件 |
-|---------|---------|
-| `functional` — 功能性（新功能 / 修改 / 移除 / Bug 修复） | `tasks-functional.md` |
-| `nonfunctional` — 非功能（性能 / 安全 / 重构 / 技术债 / 可观测性 / 可靠性 / 架构调整） | `tasks-nonfunctional.md` |
-| `infrastructure` — 基础设施（升级 / 迁移 / CI / 容器化 / 配置变更） | `tasks-infra.md` |
-| `lightweight` — 轻量（文档 / 测试补充 / 合规 / License / 文案 / 样式） | `tasks-lightweight.md` |
+| 模板 | 说明 |
+|---|---|
+| `tasks-template.md` | 统一可扩展骨架：上游依赖表 + 公共前置 + 任务族插槽（四选一）+ 公共收尾 + section 启用条件 |

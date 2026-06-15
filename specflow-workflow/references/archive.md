@@ -22,7 +22,8 @@
 ```text
 IF specflow/specs/<capability>.md 不存在:
    根据 spec-delta 中"目标主规约"节确定 capability 名称
-   用"新增需求"创建该文件
+   用 {SKILL_DIR}/assets/spec.md 模板创建该文件（# Feature: <capability> 顶层 + 同构需求块）
+   用"新增需求"填充需求块
    IF spec-delta 中存在修改需求 OR 删除需求 OR 重命名需求:
        阻断 — 主 spec 缺失但 spec-delta 声称要修改/删除/重命名，数据不一致
        暂停，询问用户：
@@ -33,18 +34,20 @@ ELSE:
    IF 无归属当前 capability 的需求:
      跳过（该 capability 本次无变更）
    FOR EACH 筛选后的新增需求:
-     添加到目标主 spec
+     添加到目标主 spec，原样保留 EARS 行与 ```gherkin Scenario 块
    FOR EACH 筛选后的修改需求:
-     用完整更新后的需求块替换主 spec 中同名需求
+     用完整更新后的需求块替换主 spec 中同名需求，保留 EARS 句式与 Scenario 块完整
    FOR EACH 筛选后的删除需求:
      从主 spec 移除需求，需确保 spec-delta 记录了原因/迁移方案
    FOR EACH 筛选后的重命名需求:
-     在主 spec 中更新需求名称，保持场景内容一致
+     在主 spec 中更新需求名称，保持 EARS 需求句式与 Gherkin Scenario 块一致
    若执行完删除后主 spec 无剩余需求:
      删除该主 spec 文件
 ```
 
-> 若 spec-delta 中"目标主规约"节记录多个 capability，对每个分别执行以上规则。
+> spec-delta 与主 spec 需求块同构（EARS 行 + ```gherkin Scenario 块）；落账原样合并，不重写需求措辞或 Scenario 结构。
+> 主 spec 内 `- 目标主规约：` 归属行可省略（主 spec 本身即归属）；spec-delta 中保留。
+> 若 spec-delta 中"目标主规约"节记录多个 capability，每个 capability 对应一个独立的 `# Feature:` 主 spec 文件，分别执行以上规则。
 
 ### 阻断
 

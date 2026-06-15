@@ -1,5 +1,18 @@
 # 规约增量：<变更标题>
 
+<!--
+格式约定（硬约束）：
+- 需求功能定义必须用 EARS 句式，关键字英文。至少一句 SHALL。可选句式：
+    Ubiquitous : The <system> SHALL <response>.
+    State-driven : WHILE <state> THE <system> SHALL <response>.
+    Event-driven : WHEN <trigger> THE <system> SHALL <response>.
+    Optional : WHERE <feature is included> THE <system> SHALL <response>.
+    Unwanted : IF <condition>, THEN THE <system> SHALL <response>.
+- 验收标准必须用 Gherkin ```gherkin Scenario 围栏块，关键字英文（Scenario/Given/When/Then/And/But），步骤正文中文。每条需求至少一个 Scenario。
+- 主 spec 与 spec-delta 需求块同构，遵守同一套语法约束。
+- 不再使用「系统必须…」散文式行为描述，也不再使用 #### 场景： 下的 - Given/- When/- Then 散列。
+-->
+
 ## 目标主规约
 
 - specflow/specs/<capability>.md <!-- 例：specflow/specs/order.md -->
@@ -9,22 +22,30 @@
 ### 需求：<名称>
 - 目标主规约：specflow/specs/<capability>.md  <!-- 仅一个目标时可省略；多个时每条需求必须显式标注 -->
 
-<系统必须...> <!-- 例：系统必须在用户提交订单后 5 秒内向注册邮箱发送确认邮件 -->
+<!-- EARS 句式行为描述，例：WHEN 用户提交订单 THE system SHALL 在 5 秒内向注册邮箱发送确认邮件。 -->
 
-#### 场景：<名称>
-
-- Given <前置条件> <!-- 例：用户已登录且购物车中有商品 -->
-- When <动作> <!-- 例：用户点击"提交订单"按钮 -->
-- Then <可观察结果> <!-- 例：系统创建订单，订单状态为"待支付" -->
+```gherkin
+Scenario: <场景名称>
+  Given <前置条件> <!-- 例：用户已登录且购物车中有商品 -->
+  When <动作> <!-- 例：用户点击"提交订单"按钮 -->
+  Then <可观察结果> <!-- 例：系统创建订单，订单状态为"待支付" -->
+```
 
 ## 修改需求
 
-<!-- 包含完整更新后的需求块（含 - 目标主规约 标注）。
-从主 spec 复制整个需求块（含所有场景），修改以反映新行为。
+<!-- 包含完整更新后的需求块（含 - 目标主规约 标注、EARS 行、Gherkin Scenario 块）。
+从主 spec 复制整个需求块，修改以反映新行为。
 例：
 ### 需求：订单列表查询
 - 目标主规约：specflow/specs/order.md
 （以下为从 specflow/specs/order.md 复制的完整块，已更新...）
+The system SHALL ...
+```gherkin
+Scenario: ...
+  Given ...
+  When ...
+  Then ...
+```
 ... -->
 
 ## 删除需求
