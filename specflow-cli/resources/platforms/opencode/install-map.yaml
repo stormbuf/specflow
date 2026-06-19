@@ -1,0 +1,13 @@
+# OpenCode 平台安装映射
+# 本文件由 `specflow init` 读取，决定 specflow 内嵌资源安装到目标项目的哪些目录。
+# `specflow update` 也会读取此文件做增量同步。
+
+platform: opencode
+
+install_targets:
+  skills: ".opencode/skills/"           # specflow 内置 skill 安装目录
+  plugins: ".opencode/plugins/"         # 平台插件（inject-workflow-state 等）安装目录
+  agents: ".opencode/agents/"           # native + custom agent 安装目录
+
+# 注意：source: platform 的 agent 不安装（平台自带）
+# 注意：lib/ 下的共享脚本随 plugins 一起安装，保持相对路径 ../lib/ 可用

@@ -1,6 +1,15 @@
 *.log
 .DS_Store
 specflow/state.json
+
+# CLI 编译产物
+specflow-cli/specflow
+
+# IDE
+.idea/
+.vscode/
+
+# 旧 opencode 配置（重构前遗留）
 /.opencode/*
 !/.opencode/skills/
 /.opencode/skills/*

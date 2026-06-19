@@ -1,0 +1,70 @@
+# agent 声明
+# 本文件由 `specflow init` 写入，可手动扩展 custom agent。
+# `specflow validate` 会校验每个 agent 的 source / jsonl_file / agent_file 字段。
+#
+# 字段说明：
+#   source:      native | platform | custom
+#                - native:  specflow 内置 agent（agents/*.md），不需要 agent_file
+#                - platform: 平台自带 agent（不安装到项目），不需要 agent_file
+#                - custom:  用户自建 agent，必须提供 agent_file（.specflow/agents/ 下的相对路径）
+#   jsonl_file:  任务目录下的 jsonl 文件名（如 implement.jsonl），null 表示不注入文件上下文
+#   require_task: 是否要求活跃任务才能运行
+#   readonly:    是否只读（不修改源码）
+#   can_write:   是否可写源码
+#   constraints: 行为约束列表，会被 inject-subagent-context.js 注入到 sub-agent prompt
+
+agents:
+  specflow-implement:
+    source: native
+    jsonl_file: implement.jsonl
+    require_task: true
+    readonly: false
+    can_write: true
+    constraints:
+      - "严格遵循 implement.md 中的步骤顺序，不要跳步"
+      - "每完成一个行为切片，立即更新 implement.md 中的状态标记"
+      - "不执行 git commit / push / merge，由 finish-work 统一处理"
+      - "遇到 prd.md 中需求不明确时，停止实现并向调用方报告，不要自行臆断"
+
+  specflow-check:
+    source: native
+    jsonl_file: check.jsonl
+    require_task: true
+    readonly: false
+    can_write: true
+    constraints:
+      - "以 prd.md 的验收标准为唯一判据，不要引入 prd 之外的期望"
+      - "发现问题时可自行修复，但修复后必须重新验证"
+      - "不执行 git commit / push / merge"
+      - "自修复循环上限 3 轮，仍未通过则停止并报告"
+
+  specflow-research:
+    source: native
+    jsonl_file: null
+    require_task: false
+    readonly: true
+    can_write: false
+    constraints:
+      - "只读模式，不修改任何源码、配置或任务文件"
+      - "研究结果写入任务的 research/ 目录或 workspace"
+      - "不执行任何写操作的 git 命令"
+
+# --- 平台 agent 示例（platform 自带，不安装到项目）---
+#  opencode-builder:
+#    source: platform
+#    jsonl_file: null
+#    require_task: false
+#    readonly: false
+#    can_write: true
+#    constraints: []
+
+# --- custom agent 示例（用户自建，需提供 agent_file）---
+#  specflow-oracle:
+#    source: custom
+#    agent_file: agents/oracle.md
+#    jsonl_file: oracle.jsonl
+#    require_task: true
+#    readonly: true
+#    can_write: false
+#    constraints:
+#      - "仅基于 spec/ 目录给出架构建议"

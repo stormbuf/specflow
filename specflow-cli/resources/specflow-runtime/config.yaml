@@ -1,0 +1,21 @@
+# specflow 项目级配置
+# 本文件由 `specflow init` 写入，可由项目维护者手动修改。
+# `specflow validate` 会校验必填字段与格式。
+
+specflow_version: "0.1.0"          # 创建此配置时的 CLI 版本
+
+vcs: jj                             # 版本管理工具: git | jj
+platform: opencode                  # 目标平台: opencode | pi
+
+max_journal_lines: 2000             # journal 单文件最大行数，超限轮转到 journal-(N+1).md
+
+# mem 配置（跨会话对话日志检索）
+mem:
+  enabled: true                     # 是否启用 mem 跨会话检索
+  log_paths:                        # 对话日志搜索路径（自动检测，可手动覆盖）
+    - ~/.opencode/sessions/
+    # - ~/.pi/agent/sessions/
+
+# session 独占配置
+session:
+  stale_threshold_hours: 24         # stale 指针检测阈值，超过则 doctor 标记为 stale
