@@ -1,180 +1,127 @@
-# Specflow Workflow
+# Specflow
 
-本仓库维护一个独立的 `specflow-workflow` skill，用于稳定执行变更工作流，不依赖外部 schema CLI、Delta、archive 或 schema validate 机制。
+Spec 驱动的变更生命周期管理工具。通过 Go CLI + 平台插件 + auto-trigger skills，让 AI 编码助手在变更全生命周期中自动获得正确的上下文、阶段感知和跨会话记忆。
 
-将 `specflow-workflow/` 放到目标平台的 skills 目录中即可使用（如 `.agents/skills/`、`.claude/skills/`、`.cursor/skills/` 等）。`install-specflow-workflow` 提供项目级安装包装，用于把该 workflow 复制安装到其他项目。
+## 核心特性
 
-## 调用方式
+- **上下文自动就位** — 每次派发子 agent 时，相关任务工件与规范自动注入，无需手动指定文件
+- **流程阶段感知** — AI 每轮对话自动知道"现在在第几步、下一步做什么"，流程不再靠人盯
+- **跨会话记忆** — 项目规范、踩坑经验、会话日志持久留存，新会话不再从零开始
+- **配置驱动扩展** — 新增 agent 类型或接入第三方 agent，只需改配置文件，不改代码
+- **版本管理中立** — 不管用 git 还是 jj，开箱即用
+- **状态注入不污染对话** — 工作流上下文作为独立消息注入，你的原始对话内容保持干净
 
-该 skill 只支持显式调用，避免被 AI 根据普通需求描述无意触发。
+## 架构
 
-```text
-/specflow-workflow roadmap   # Roadmap 阶段
-/specflow-workflow plan      # Roadmap 阶段
-/specflow-workflow pr        # Proposal 阶段
-/specflow-workflow proposal  # Proposal 阶段
-/specflow-workflow sd        # Spec Delta 阶段
-/specflow-workflow spec      # Spec Delta 阶段
-/specflow-workflow design    # Design 阶段
-/specflow-workflow tasks     # Tasks 阶段
-/specflow-workflow apply     # Apply 阶段（含验证）
-/specflow-workflow archive   # Archive 阶段
-/specflow-workflow arch      # System Architecture / ADR 阶段
-/specflow-workflow architecture  # System Architecture / ADR 阶段
-/specflow-workflow adr       # System Architecture / ADR 阶段
+三层职责，各司其职：
+
+| 层 | 载体 | 职责 |
+|----|------|------|
+| skill 层 | `.opencode/skills/` | auto-trigger skills + 命令式 skill |
+| 插件层 | `.opencode/plugins/` | 上下文注入、工作流状态同步、会话启动自动化 |
+| 状态层 | `.specflow/` | 任务状态、工件、规范库、会话日志、运行时指针 |
+
+## 安装
+
+### 从源码编译
+
+```bash
+cd specflow-cli
+go build -o specflow .
 ```
 
-单独输入 `/specflow-workflow` 时，应先询问用户选择阶段。
+### Homebrew（规划中）
 
-## 工作流
-
-完整变更流程：
-
-```text
-版本规划 -> 提议讨论 -> 规约变更 -> 系统架构 / ADR -> 技术方案 -> 任务拆解 -> 执行（含验证） -> 归档
+```bash
+brew install ./specflow.rb
 ```
 
-版本规划使用单文件台账：
+### 初始化项目
 
-```text
-specflow/roadmap.md
+```bash
+specflow init -u <developer> --opencode
 ```
 
-`roadmap.md` 使用 `ROADMAP_META.next_f` 和 `ROADMAP_META.next_t` 分配 F/T 编号。新增条目后对应计数递增；删除未执行条目也不复用编号。若旧文件缺少 `ROADMAP_META`，Roadmap 阶段会根据现有 F/T 最大编号补齐。
+init 会自动检测版本管理系统（`.jj/` 优先，其次 `.git/`），安装三层结构，记录文件指纹。安装完成后重启 AI Agent。
 
-每次变更使用独立目录，`<change-id>` 使用日期、短语义名和冲突顺序号：
+## 使用
 
-```text
-specflow/changes/<change-id>/
-├── proposal.md
-├── spec-delta.md
-├── design.md
-├── tasks.md
-└── verification.md
+### 典型工作流
+
+```bash
+# 1. 用户描述需求，AI 经确认后建任务
+specflow task create --title "添加导出功能" --intent "用户需要导出数据为 CSV"
+
+# 2. AI 加载 specflow-brainstorm 编写 prd.md / implement.md
+# 3. 整理 jsonl 上下文清单
+specflow add-context .specflow/changes/<change-id> specflow-implement ".specflow/spec/backend/coding-style.md" "编码规范"
+
+# 4. 开始任务
+specflow task start
+
+# 5. AI 派发 specflow-implement 子 agent（上下文由插件自动注入）
+# 6. AI 派发 specflow-check 子 agent 验证
+# 7. 同步行为规约、更新规范库
+
+# 8. 归档
+/specflow:finish-work
 ```
 
-格式：
+### 命令速查
 
-```text
-YYYY-MM-DD-short-slug-N
+| 命令 | 用途 |
+|------|------|
+| `specflow init` | 初始化项目 |
+| `specflow task create/start/finish/archive` | 任务生命周期 |
+| `specflow task current/list` | 查看任务状态 |
+| `specflow task release` | 清理 stale session 指针 |
+| `specflow get-context` | 聚合 session 上下文 |
+| `specflow build-context` | 构建子 agent 上下文 |
+| `specflow add-context` | 管理 jsonl 上下文清单 |
+| `specflow sync-agent` | 同步 custom agent |
+| `specflow add-session` | 记录会话日志 |
+| `specflow validate` | 校验配置 |
+| `specflow doctor` | 诊断项目健康 |
+| `specflow mem search` | 跨会话对话检索 |
+| `specflow update` | 同步项目到 CLI 版本 |
+| `specflow upgrade` | 升级 CLI 二进制 |
+| `/specflow:continue` | 任务内推进下一步 |
+| `/specflow:finish-work` | 归档任务 + 写会话日志 |
+
+### Agent 接入
+
+在 `.specflow/agents.yaml` 中声明 agent，支持三种来源：
+
+```yaml
+agents:
+  specflow-implement:          # native: specflow 内置，随 CLI 打包
+    source: native
+    jsonl_file: implement.jsonl
+    constraints:
+      - "禁止 git commit / push / merge"
+
+  code-reviewer:               # platform: 复用平台已有 agent，不同步
+    source: platform
+    jsonl_file: code-reviewer.jsonl
+
+  specflow-oracle:             # custom: 自建，sync-agent 同步到平台
+    source: custom
+    jsonl_file: oracle.jsonl
+    agent_file: agents/oracle.md
 ```
 
-规则：
+### 版本管理
 
-- `short-slug` 使用 2-5 个英文 kebab-case 单词概括变更主题。
-- `N` 从 0 开始，只有同日期、同 `short-slug` 已存在时才递增。
-- 同日期但不同 `short-slug` 的 change 各自从 `0` 开始。
+两步升级体系：
 
-示例中的 `2026-06-06-refine-workflow-skill-0` 是 change-id：
+- `specflow upgrade` — 升级全局 CLI 二进制
+- `specflow update` — 同步项目到本地 CLI 版本，含文件指纹冲突检测
 
-```text
-2026-06-06-add-order-export-0
-2026-06-06-refine-workflow-skill-0
-2026-06-06-refine-workflow-skill-1
-```
+## 文档
 
-长期规约使用：
+- [重构设计思路](docs/重构设计思路.md) — 背景、调研、架构决策、方案设计
+- [接口契约](docs/接口契约.md) — 五个模块的详细接口定义
 
-```text
-specflow/specs/<capability>.md
-```
+## 许可证
 
-已归档变更存放在：
-
-```text
-specflow/archive/<change-id>/
-```
-
-## 阶段定义
-
-- `roadmap.md`：规划台账和完成历史，维护 `🔥 正在进行`、`📋 下一批 (P0)`、`💡 远期 (P1/P2)` 和 `已完成历史`。
-- `proposal.md`：提议讨论结果，明确为什么做、范围、非范围、变更类型（`functional` / `nonfunctional` / `infrastructure` / `lightweight`）、是否需要规约和技术方案。
-- `spec-delta.md`：本次规约变更，描述对系统可观察行为的新增、修改、删除或重命名。
-- `architecture.md` + `adr/`：系统边界图、系统架构图（Mermaid UML）和长期技术决策。
-- `design.md`：本次变更的技术方案，说明实现方式、接口、数据流、风险、迁移和验证策略。
-- `tasks.md`：可独立验证的执行清单，按变更类型从四种分组模板生成。
-- `verification.md`：验证结果摘要，只记录 `passed | failed | partial`、检查项和必要 notes。
-
-Proposal 不强依赖 Roadmap。若 `roadmap.md` 存在待实现项，Proposal 阶段会先询问是否从 Roadmap 选择本次执行项；选择后写入 `proposal.md` 的 `Roadmap 来源` 字段，同时自动将对应条目移入 Roadmap 的 `🔥 正在进行`。Archive 阶段会按该来源将对应条目移入完成历史。
-
-## 核心概念映射
-
-### 定义
-
-| 概念 | 是什么 | 物理位置 |
-|------|--------|----------|
-| **capability** | 系统的一项独立可观察能力 | `specflow/specs/<capability>.md` |
-| **change** | 一次变更生命周期（从 proposal 到 archive） | `specflow/changes/<change-id>/` |
-| **spec-delta** | 本次 change 对 capability 的规约增量 | `specflow/changes/<change-id>/spec-delta.md` |
-
-### 基数关系
-
-**change : spec-delta = 1 : 0..1**
-- 一个 change 最多一份 spec-delta（只有 proposal 声明"是否需要规约 = yes"时才有）
-- `lightweight` 类变更通常不改变可观察行为，不产生 spec-delta
-
-**spec-delta : capability = N : M**
-- 一份 spec-delta 可修改多个 capability（"目标主规约"节可列出多个 `<capability>.md`）
-- 一个 capability 可被多份 spec-delta 修改（不同 change 在不同时间点修改同一个能力）
-- Archive 阶段按 capability 逐一合并
-
-### 典型映射范式
-
-| 范式 | 关系 | 场景 |
-|------|------|------|
-| 1:1:1 | change → spec-delta → 1 个 capability | 最常见的单一功能变更 |
-| 1:1:N | change → spec-delta → N 个 capability | 功能链，一个变更同时修改多个能力 |
-| 多:多:1 | N 个 change → N 份 spec-delta → 1 个 capability | 一个能力经过多次变更增量演进 |
-
-### 功能链如何拆解 capability
-
-当一个功能链同时涉及核心功能和若干子功能时，按以下标准决定合为一个 capability 还是拆为多个：
-
-- **合**：子功能离开核心功能就没有独立意义（如"导出格式选择"只为"导出"服务）
-- **拆**：子功能可被其他 capability 独立消费、独立演进、独立验收（如"权限校验"可被"导入"、"报表"等多种能力复用）
-
-capability 划分由 proposal 阶段的苏格拉底追问确定，与 change 和 spec-delta 的对应关系无关——spec-delta 只管"这次改了哪些 capability"。
-
-## 归档规则
-
-归档阶段只合并规约变更：
-
-```text
-spec-delta.md -> specflow/specs/<capability>.md
-```
-
-归档完成后，必须使用当前项目实际采用的版本管理工具封存结果。具体工具由执行该项目的 AI 根据项目规则和仓库事实判断；提交或变更描述必须包含 `change-id: <change-id>`。
-
-示例：
-
-```text
-docs: archive workflow change
-
-change-id: 2026-06-06-refine-workflow-skill-0
-```
-
-归档阶段不合并 `design.md`。整个 change 目录归档后移入 `specflow/archive/<change-id>/`，成为历史记录，用于解释当时为什么这样设计、排除了什么、识别了哪些风险。
-
-如果变更产生长期架构影响或长期技术决策，只更新对应长期文档：
-
-```text
-architecture.md  # 当前架构事实、模块边界、数据流
-adr/*.md         # 长期技术决策和约束
-```
-
-## 真相源边界
-
-归档后，各类文档和代码的权威边界如下：
-
-- 源码是实现真相源。
-- 测试是可执行行为证据。
-- `specflow/specs/` 是对外行为承诺。
-- `architecture.md` 和 `adr/` 是长期结构与决策约束。
-- `specflow/archive/<change-id>/design.md` 是历史方案记录，不是当前实现正确性的判定依据。
-
-如果后续源码演进导致历史 `design.md` 过期，不回头维护历史 design：
-
-- 行为变了：创建新的 `spec-delta.md`，归档后更新主 spec。
-- 架构事实变了：更新 `architecture.md`。
-- 长期技术决策变了：新增、更新或废弃 ADR。
-- 实现细节变了：由源码和测试体现。
+MIT

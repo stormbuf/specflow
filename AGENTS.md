@@ -1,29 +1,42 @@
 # AGENTS.md
 
+## 构建与开发
+
+- **编译 CLI**：`cd specflow-cli && go build -o specflow .`
+- **Go module**：模块名 `specflow`（本地模块，非远程 import path）
+- **依赖**：`cobra`、`yaml.v3`（见 `specflow-cli/go.mod`）
+- **编译产物** `specflow-cli/specflow` 已在 `.gitignore` 中排除，不要提交
+- **embed 资源同步**：`specflow-cli/resources/` 是 `skills/`、`agents/`、`specflow-runtime/`、`platforms/` 的内嵌副本，通过 `//go:embed resources` 编译进二进制。修改源目录后必须同步：`rsync -av skills/ specflow-cli/resources/skills/`（其他目录同理），否则编译产物不含最新改动
+
+## 项目结构
+
+| 目录 | 说明 |
+|------|------|
+| `specflow-cli/` | Go CLI 源码，含 7 个 internal 包（config/taskstore/session/vcs/fingerprint/context/installer） |
+| `skills/` | 8 个 auto-trigger skill + 5 个模板 |
+| `agents/` | 3 个 native agent 定义（specflow-implement / specflow-check / specflow-research） |
+| `specflow-runtime/` | 运行时模板（workflow.md / config.yaml / agents.yaml / spec seed） |
+| `platforms/opencode/` | OpenCode 平台适配（3 个 JS 插件 + 1 个共享 lib + install-map.yaml） |
+| `specflow-workflow/` | **旧版单体 skill，已废弃，不要修改** |
+
 ## 版本管理
 
-- 本仓库使用 jj。使用 `jj log`、`jj diff`、`jj describe`、`jj new`；本地工作流不要使用 `git add`、`git commit`、`git stash` 或 `git checkout`。
-- 用户要求用 jj 提交时，执行 `jj describe -m "..."` 后再执行 `jj new`，确保当前变更被封存，后续工作进入新变更。
+- 本仓库使用 jj。使用 `jj log`、`jj diff`、`jj describe`、`jj new`；**不要使用** `git add`、`git commit`、`git stash`、`git checkout`。
+- 用户要求提交时，执行 `jj describe -m "..."` 后再执行 `jj new`，确保当前变更被封存，后续工作进入新变更。
+- specflow CLI 同时支持 git 和 jj，通过 `config.yaml:vcs` 配置或 `specflow init` 时自动扫描检测（优先 jj）。
 
-## 项目形态
+## 边界
 
-- 本仓库使用根目录 `specflow-workflow/` 作为稳定工作流 skill；将 `specflow-workflow/` 放到目标平台的 skills 目录中即可使用（如 `.agents/skills/`、`.claude/skills/`、`.cursor/skills/` 等）。
-- 修改 `specflow-workflow/` 后，如需同步到其他项目，必须使用项目级 skill `install-specflow-workflow`，不要手写目标项目名或直接复制遗漏资源；该 skill 会扫描 `~/project/`、让用户选择目标项目，并执行项目级安装。
-
-## 安装到其他项目
-
-将当前工作区的 `specflow-workflow` 复制安装到另一个项目。
-
-执行规则：
-
-- 扫描 `~/project/` 下的一级目录。
-- 使用 `question` 工具让用户选择目标项目。
-- 将 `specflow-workflow/` 目录复制到目标项目的 `.agents/skills/` 目录下。
-- 不使用 `-g`，只做项目级安装。
-- 安装后提醒用户重启目标项目中的 AI Agent。
+- ✅ 可以修改 `specflow-cli/`、`skills/`、`agents/`、`specflow-runtime/`、`platforms/` 下的源文件
+- ✅ 修改源目录后同步 `specflow-cli/resources/` embed 副本
+- ⚠️ 修改 `skills/` 或 `agents/` 后需同步对应的 `specflow-cli/resources/` 副本
+- ❌ 不要修改 `specflow-workflow/`（已废弃）
+- ❌ 不要提交 `specflow-cli/specflow` 二进制文件
+- ❌ 不要提交 `.specflow/state.json` 和 `.opencode/` 中未显式放行的本地状态
 
 ## 当前仓库事实
 
-- 预期工作流工件仍在定义中。仓库出现可执行配置前，不要臆造 build、test、lint 或 codegen 命令。
-- 当前仓库没有 manifest、源码树、CI 配置或测试运行器。
-- `specflow/state.json` 和 `.agents/` 中未显式放行的内容是被忽略的本地状态，不应提交。
+- Go CLI 已实现并通过端到端验证（18 项测试全通过）。
+- 8 个 skill 已实现（含 5 个模板），目前是 placeholder 级别，后续根据实际使用迭代。
+- OpenCode 插件已实现（3 个 JS 插件 + 1 个共享 lib），通过 `node --check` 语法校验。
+- `specflow-cli/resources/` 是 embed 副本，修改源目录后需手动同步，否则编译产物不含最新改动。
