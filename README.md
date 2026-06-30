@@ -123,6 +123,7 @@ specflow task start
 | `specflow mem search` | 跨会话对话检索 |
 | `specflow update` | 同步项目到 CLI 版本 |
 | `specflow upgrade` | 升级 CLI 二进制 |
+| `specflow worktree create/list/remove/merge` | 多 agent worktree 管理 |
 | `/specflow:continue` | 任务内推进下一步 |
 | `/specflow:finish-work` | 归档任务 + 写会话日志 |
 
