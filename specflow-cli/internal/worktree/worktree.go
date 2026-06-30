@@ -238,8 +238,8 @@ func Remove(projectDir, name string, force bool) error {
 		if force {
 			args = append(args, "--force")
 		}
-		if err := exec.Command("git", args...).Run(); err != nil {
-			return fmt.Errorf("git worktree remove 失败: %w", err)
+		if out, err := exec.Command("git", args...).CombinedOutput(); err != nil {
+			return fmt.Errorf("git worktree remove 失败: %w\n%s\n提示: 如有未跟踪文件，使用 --force 强制移除", err, string(out))
 		}
 
 		// 删除分支
@@ -270,8 +270,8 @@ func Remove(projectDir, name string, force bool) error {
 			if force {
 				args = append(args, "--force")
 			}
-			if err := exec.Command("git", args...).Run(); err != nil {
-				return fmt.Errorf("git worktree remove 失败: %w", err)
+			if out, err := exec.Command("git", args...).CombinedOutput(); err != nil {
+				return fmt.Errorf("git worktree remove 失败: %w\n%s\n提示: 如有未跟踪文件，使用 --force 强制移除", err, string(out))
 			}
 			exec.Command("git", "-C", projectDir, "branch", "-D", branchName).Run()
 			return nil

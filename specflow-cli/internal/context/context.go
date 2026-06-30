@@ -88,6 +88,9 @@ func readFileContent(projectDir, relPath string) string {
 	fullPath := filepath.Join(projectDir, relPath)
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "⚠️  上下文文件不存在: %s\n", relPath)
+		}
 		return ""
 	}
 	return string(data)

@@ -119,10 +119,11 @@ func Init(projectDir string, embedFS embed.FS, opts InitOptions) (*InitResult, e
 
 	// 10. 安装 skills
 	skillsDir := filepath.Join(projectDir, im.InstallTargets["skills"])
-	skillCount, err := copyEmbeddedDirWithCount(embedFS, "resources/skills", skillsDir)
+	_, err = copyEmbeddedDirWithCount(embedFS, "resources/skills", skillsDir)
 	if err != nil {
 		return nil, fmt.Errorf("安装 skills 失败: %w", err)
 	}
+	skillCount := countTopLevelDirs(embedFS, "resources/skills")
 
 	// 11. 安装 plugins
 	pluginsDir := filepath.Join(projectDir, im.InstallTargets["plugins"])
@@ -161,6 +162,21 @@ func Init(projectDir string, embedFS embed.FS, opts InitOptions) (*InitResult, e
 		Plugins:  pluginCount,
 		Agents:   agentCount,
 	}, nil
+}
+
+// countTopLevelDirs 统计 embed.FS 中某路径下的顶层目录数
+func countTopLevelDirs(embedFS embed.FS, srcDir string) int {
+	entries, err := embedFS.ReadDir(srcDir)
+	if err != nil {
+		return 0
+	}
+	count := 0
+	for _, entry := range entries {
+		if entry.IsDir() {
+			count++
+		}
+	}
+	return count
 }
 
 // copyEmbeddedDir 递归复制 embed.FS 中的目录到目标路径
@@ -438,7 +454,7 @@ func SyncAgent(specflowDir, projectDir, agentName, platform string, embedFS embe
 		if err != nil {
 			continue
 		}
-		destPath := filepath.Join(agentsDir, filepath.Base(agent.AgentFile))
+		destPath := filepath.Join(agentsDir, name+".md")
 		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
 			continue
 		}

@@ -158,7 +158,11 @@ var addContextCmd = &cobra.Command{
 		}
 
 		fullTaskDir := filepath.Join(getProjectDir(), taskDir)
-		return context.AddContext(fullTaskDir, *agentConf.JSONLFile, filePath, reason)
+		if err := context.AddContext(fullTaskDir, *agentConf.JSONLFile, filePath, reason); err != nil {
+			return err
+		}
+		fmt.Printf("✅ 已添加上下文: %s → %s (%s)\n", filePath, *agentConf.JSONLFile, reason)
+		return nil
 	},
 }
 

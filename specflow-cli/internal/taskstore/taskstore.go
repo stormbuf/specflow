@@ -289,6 +289,11 @@ func AddSubtask(specflowDir, parentID, childID string) error {
 	if err != nil {
 		return fmt.Errorf("加载父任务失败: %w", err)
 	}
+	// 先验证子任务存在
+	child, err := Load(specflowDir, childID)
+	if err != nil {
+		return fmt.Errorf("加载子任务失败: %w", err)
+	}
 	// 检查是否已存在
 	for _, c := range parent.Children {
 		if c == childID {
@@ -298,11 +303,6 @@ func AddSubtask(specflowDir, parentID, childID string) error {
 	parent.Children = append(parent.Children, childID)
 	if err := parent.SaveToSpecflowDir(specflowDir); err != nil {
 		return err
-	}
-
-	child, err := Load(specflowDir, childID)
-	if err != nil {
-		return fmt.Errorf("加载子任务失败: %w", err)
 	}
 	child.Parent = &parentID
 	return child.SaveToSpecflowDir(specflowDir)
