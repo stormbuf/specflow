@@ -7,6 +7,7 @@ Spec 驱动的变更生命周期管理工具。通过 Go CLI + 平台插件 + au
 - **上下文自动就位** — 每次派发子 agent 时，相关任务工件与规范自动注入，无需手动指定文件
 - **流程阶段感知** — AI 每轮对话自动知道"现在在第几步、下一步做什么"，流程不再靠人盯
 - **跨会话记忆** — 项目规范、踩坑经验、会话日志持久留存，新会话不再从零开始
+- **自动生成规范** — 从真实代码库分析并生成项目专属 spec，不用手写空白模板
 - **配置驱动扩展** — 新增 agent 类型或接入第三方 agent，只需改配置文件，不改代码
 - **版本管理中立** — 不管用 git 还是 jj，开箱即用
 - **状态注入不污染对话** — 工作流上下文作为独立消息注入，你的原始对话内容保持干净
@@ -42,7 +43,42 @@ brew install ./specflow.rb
 specflow init -u <developer> --opencode
 ```
 
-init 会自动检测版本管理系统（`.jj/` 优先，其次 `.git/`），安装三层结构，记录文件指纹。安装完成后重启 AI Agent。
+init 会自动检测版本管理系统（`.jj/` 优先，其次 `.git/`），安装三层结构，记录文件指纹，向项目 `AGENTS.md` 注入 managed block。安装完成后会提示选择 spec 模板（可跳过）。安装完成后重启 AI Agent。
+
+spec 模板相关选项：
+
+```bash
+specflow init -u <developer> --opencode --all-spec        # 安装所有 spec 模板
+specflow init -u <developer> --opencode --with-spec guides,backend  # 指定分类
+specflow init -u <developer> --opencode --no-spec          # 跳过 spec 模板
+```
+
+### Spec 模板
+
+spec 模板是预置的规范库骨架，安装到 `.specflow/spec/`。init 时可选安装，也可随时通过命令安装：
+
+```bash
+specflow spec list                    # 查看可用分类
+specflow spec install                 # 交互式多选安装
+specflow spec install guides backend  # 指定分类安装
+specflow spec install --all           # 全部安装
+```
+
+可用分类：
+
+| 分类 | 说明 | 文件数 |
+|------|------|--------|
+| `guides` | 思维指南（代码复用、跨层、跨平台），预填充直接可用 | 4 |
+| `backend` | 后端开发规范骨架（目录结构、数据库、错误处理、质量、日志） | 6 |
+| `frontend` | 前端开发规范骨架（目录结构、组件、Hook、状态管理、质量、类型安全） | 7 |
+| `architecture` | 架构决策记录骨架（ADR 索引 + 模板） | 2 |
+| `testing` | 测试规范骨架（测试约定、mock 策略、集成测试） | 4 |
+| `security` | 安全规范骨架（认证授权、输入验证、密钥管理） | 4 |
+| `api` | API 设计规范骨架（REST 约定、错误响应、版本管理） | 4 |
+| `devops` | DevOps 规范骨架（CI/CD、部署、发布流程） | 4 |
+| `git-conventions` | Git 工作流规范骨架（提交约定、分支策略） | 2 |
+
+安装骨架模板后，可使用 `specflow-spec-bootstrap` skill 从真实代码库自动分析并填充规范内容，无需手写。
 
 ## 使用
 
@@ -79,6 +115,8 @@ specflow task start
 | `specflow build-context` | 构建子 agent 上下文 |
 | `specflow add-context` | 管理 jsonl 上下文清单 |
 | `specflow sync-agent` | 同步 custom agent |
+| `specflow spec list` | 列出可用 spec 模板分类 |
+| `specflow spec install` | 安装 spec 模板 |
 | `specflow add-session` | 记录会话日志 |
 | `specflow validate` | 校验配置 |
 | `specflow doctor` | 诊断项目健康 |

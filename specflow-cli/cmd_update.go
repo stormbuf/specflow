@@ -103,36 +103,43 @@ var updateCmd = &cobra.Command{
 		}
 
 		// 刷新指纹
-		newFP := &fingerprint.Fingerprints{
-			SpecflowVersion: version,
-			Files:           make(map[string]string),
-		}
-		newFP.RecordAll(projectDir, managedFiles)
-		newFP.Save(specflowDir)
+	newFP := &fingerprint.Fingerprints{
+		SpecflowVersion: version,
+		Files:           make(map[string]string),
+	}
+	newFP.RecordAll(projectDir, managedFiles)
+	newFP.Save(specflowDir)
 
-		if useJSON(cmd) {
-			data, _ := json.Marshal(map[string]interface{}{
-				"updated":   updated,
-				"skipped":   skipped,
-				"conflicts": conflicts,
-			})
-			fmt.Println(string(data))
-		} else {
-			fmt.Printf("✅ 已更新 %d 个文件\n", len(updated))
-			for _, f := range updated {
-				fmt.Printf("  更新: %s\n", f)
-			}
-			fmt.Printf("⏭️  跳过 %d 个文件\n", len(skipped))
-			for _, f := range skipped {
-				fmt.Printf("  跳过: %s\n", f)
-			}
-			if len(conflicts) > 0 {
-				fmt.Printf("⚠️  %d 个冲突:\n", len(conflicts))
-				for _, c := range conflicts {
-					fmt.Printf("  %s → %s\n", c["file"], c["resolution"])
-				}
+	// 更新 AGENTS.md managed block
+	agentsUpdated, _ := installer.UpdateAgentsMd(projectDir, embeddedResources)
+
+	if useJSON(cmd) {
+		data, _ := json.Marshal(map[string]interface{}{
+			"updated":           updated,
+			"skipped":           skipped,
+			"conflicts":         conflicts,
+			"agents_md_updated": agentsUpdated,
+		})
+		fmt.Println(string(data))
+	} else {
+		fmt.Printf("✅ 已更新 %d 个文件\n", len(updated))
+		for _, f := range updated {
+			fmt.Printf("  更新: %s\n", f)
+		}
+		fmt.Printf("⏭️  跳过 %d 个文件\n", len(skipped))
+		for _, f := range skipped {
+			fmt.Printf("  跳过: %s\n", f)
+		}
+		if len(conflicts) > 0 {
+			fmt.Printf("⚠️  %d 个冲突:\n", len(conflicts))
+			for _, c := range conflicts {
+				fmt.Printf("  %s → %s\n", c["file"], c["resolution"])
 			}
 		}
+		if agentsUpdated {
+			fmt.Println("📝 AGENTS.md managed block 已更新")
+		}
+	}
 		return nil
 	},
 }

@@ -2,5 +2,5 @@ package main
 
 import "embed"
 
-//go:embed resources
+//go:embed all:resources
 var embeddedResources embed.FS
