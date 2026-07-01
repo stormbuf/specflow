@@ -51,6 +51,8 @@
       
     
     
+      <link rel="stylesheet" href="stylesheets/extra.css">
+    
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -373,7 +375,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        核心特性
+        快速开始
       
     </span>
   </a>
@@ -384,7 +386,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        快速开始
+        文档
       
     </span>
   </a>
@@ -395,17 +397,6 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        文档
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         相关链接
       
     </span>
@@ -414,7 +405,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         许可证
@@ -452,9 +443,7 @@
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -803,7 +792,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        核心特性
+        快速开始
       
     </span>
   </a>
@@ -814,7 +803,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        快速开始
+        文档
       
     </span>
   </a>
@@ -825,17 +814,6 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        文档
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         相关链接
       
     </span>
@@ -844,7 +822,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         许可证
@@ -877,7 +855,8 @@
 <h1 id="specflow">Specflow<a class="headerlink" href="#specflow" title="Permanent link">&para;</a></h1>
 <p><strong>Spec 驱动的变更生命周期管理工具</strong></p>
 <p>Specflow 让 AI 编码助手在变更全生命周期中自动获得正确的上下文、阶段感知和跨会话记忆。</p>
-<h2 id="_1">核心特性<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<details class="quote">
+<summary>核心特性</summary>
 <ul>
 <li><strong>上下文自动就位</strong> — jsonl manifest 声明上下文文件与顺序，插件自动注入</li>
 <li><strong>流程阶段感知</strong> — workflow.md 面包屑每轮自动注入当前阶段</li>
@@ -887,7 +866,8 @@
 <li><strong>版本管理中立</strong> — 同时支持 Git 和 JJ</li>
 <li><strong>状态注入不污染对话</strong> — 非破坏性注入，绝不修改用户消息原文</li>
 </ul>
-<h2 id="_2">快速开始<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+</details>
+<h2 id="_1">快速开始<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 安装</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>brew<span class="w"> </span>install<span class="w"> </span>stormbuf/tap/specflow
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -896,7 +876,7 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># 重启 AI Agent，开始使用</span>
 </code></pre></div>
-<h2 id="_3">文档<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">文档<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="tutorial/01-what-is-vibe-coding/">什么是 Vibe Coding</a> — 从零理解 Spec 驱动的 AI 编码</li>
 <li><a href="tutorial/02-what-is-specflow/">Specflow 是什么</a> — 痛点对比与核心能力</li>
@@ -909,13 +889,13 @@
 <li><a href="tutorial/09-example/">实战示例</a> — CSV 导出功能端到端流程</li>
 <li><a href="tutorial/10-reference/">命令速查</a> — 全部 CLI 命令与配置文件</li>
 </ul>
-<h2 id="_4">相关链接<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_3">相关链接<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://github.com/stormbuf/specflow">GitHub 仓库</a></li>
 <li><a href="https://github.com/stormbuf/homebrew-tap">Homebrew Tap</a></li>
 <li>架构设计参考 <a href="https://github.com/mindfold-ai/Trellis">Trellis</a>（AGPL-3.0）</li>
 </ul>
-<h2 id="_5">许可证<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_4">许可证<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>MIT License</p>
 
 
@@ -972,7 +952,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
       <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
