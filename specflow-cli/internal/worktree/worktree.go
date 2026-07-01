@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"specflow/internal/vcs"
+	"github.com/stormbuf/specflow/internal/vcs"
 )
 
 // Config 对应 .specflow/worktree.yaml
@@ -69,7 +69,7 @@ func Create(projectDir, specflowDir, name, baseBranch string) (*Info, error) {
 	}
 
 	wtPath := filepath.Join(wtDir, name)
-	branchName := fmt.Sprintf("specflow/%s", name)
+	branchName := fmt.Sprintf("github.com/stormbuf/specflow/%s", name)
 
 	// 创建 worktree
 	switch vcsType {
@@ -200,7 +200,7 @@ func List(projectDir string) ([]Info, error) {
 	// 提取 name
 	for i := range worktrees {
 		if worktrees[i].Branch != "" {
-			worktrees[i].Name = strings.TrimPrefix(worktrees[i].Branch, "specflow/")
+			worktrees[i].Name = strings.TrimPrefix(worktrees[i].Branch, "github.com/stormbuf/specflow/")
 		}
 	}
 
@@ -214,7 +214,7 @@ func Remove(projectDir, name string, force bool) error {
 		return fmt.Errorf("未检测到 VCS")
 	}
 
-	branchName := fmt.Sprintf("specflow/%s", name)
+	branchName := fmt.Sprintf("github.com/stormbuf/specflow/%s", name)
 
 	switch vcsType {
 	case "git":

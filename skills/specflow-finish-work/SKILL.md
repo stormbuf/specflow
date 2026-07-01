@@ -1,6 +1,6 @@
 ---
 name: specflow-finish-work
-description: "specflow 归档命令。手动调用 /specflow:finish-work 时激活，检查工作区干净后归档任务、写 journal、清 session 指针。工作区有未提交改动时拒绝执行。"
+description: "specflow 归档命令。手动调用 /specflow:finish-work 时激活，归档当前任务并写 session journal。归档前建议检查工作区是否有未提交改动。"
 type: command
 trigger: "手动调用 /specflow:finish-work"
 phase: completed
@@ -8,59 +8,56 @@ phase: completed
 
 # specflow-finish-work
 
-> 归档命令。完成任务后调用，将任务移动到 archive/ 并写 journal。
+> 归档命令。完成任务后调用，将任务归档并记录 session journal。
 
 ## 核心职责
 
-检查工作区无未提交改动，将任务状态置为 completed，移动到 archive/，触发 VCS auto-commit，写 journal 条目，清 session 指针。
+归档当前任务（状态置为 completed、移动到 archive/、触发 VCS auto-commit、清 session 指针），并写 session journal 条目。
 
 ## 执行步骤
 
-### 1. 检查工作区无未提交改动
+### 1. 检查工作区状态
 
-- 调用 `specflow` 检查 VCS 状态（`vcs.HasUncommittedChanges`）
-- 若存在未提交改动：
-  - 拒绝执行，提示用户先提交或通过 sub-agent 完成后再调用
-  - 不自动提交未提交改动
-
-### 2. status → completed
-
-- 将任务 `task.json` 的 `status` 字段更新为 `completed`
+- 运行 `specflow doctor` 检查项目健康状态
+- 提醒用户确认工作区无未提交改动：若有未提交改动，建议先提交后再归档
+- `specflow task archive` 只提交归档操作本身（文件移动 + 任务产物），不会自动提交已有的未提交改动
 - 确认所有验收标准已通过（若未通过，警告但允许归档）
 
-### 3. 移动到 archive/
+### 2. 归档任务
 
-- 将任务目录从 `.specflow/changes/<task-dir>/` 移动到 `.specflow/changes/archive/<YYYY-MM>/`
-- YYYY-MM 使用任务完成时的年月
+```bash
+specflow task archive [task-dir]
+```
 
-### 4. VCS auto-commit
+- 若未指定 `<task-dir>`，默认归档当前活跃任务（即 `specflow task current` 所指向的任务）
+- 该命令依次执行：status → completed → 移动到 `archive/<YYYY-MM>/` → VCS auto-commit → 清 session 指针
+- 归档路径为 `.specflow/changes/archive/<YYYY-MM>/<task-dir>/`
 
-- 触发 VCS 自动提交，提交信息包含任务 ID 与标题
-- 提交范围：归档操作产生的文件移动 + 任务产物
+### 3. 写 session journal
 
-### 5. 写 journal 条目
+```bash
+specflow add-session --title "任务标题" --summary "变更摘要（一句话）" --task <task-dir>
+```
 
-- 在 journal 中追加一条记录，包含：
-  - 任务 ID 与标题
-  - 完成时间
-  - 变更摘要（一句话）
-  - 归档路径
-- 若 journal 单文件超过 `max_journal_lines`（默认 2000），轮转到 `journal-(N+1).md`
+- `--title`（必需）：session 标题
+- `--summary`：变更摘要
+- `--task`：关联的任务目录
+- 条目追加到 journal 文件中，记录任务 ID、完成时间与变更摘要
 
-### 6. 清 session 指针
+### 4. 确认归档结果
 
-- 清除当前 session 的活跃任务指针
-- 释放 session 独占，使 session 可接受新任务
+- 确认任务已移动到 `archive/<YYYY-MM>/`
+- 确认 session 指针已清除（任务独占已释放，可接受新任务）
 
 ## 产物
 
 - 归档后的任务目录（`.specflow/changes/archive/<YYYY-MM>/<task-dir>/`）
-- journal 条目
-- VCS 提交
+- session journal 条目
+- VCS 提交（归档操作 + 任务产物）
 
 ## 约束
 
-- 工作区有未提交改动时拒绝执行
+- `specflow task archive` 不检查未提交改动，归档前需人工确认工作区干净
 - 不修改 prd.md / implement.md 的内容（只移动文件）
 - 归档后任务目录不可恢复到活跃区（需重新创建任务）
-- session 指针必须在归档成功后清除
+- session 指针在归档成功后自动清除

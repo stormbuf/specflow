@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
-	"specflow/internal/context"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/context"
 )
 
 var validateCmd = &cobra.Command{
@@ -108,9 +109,10 @@ var validateCmd = &cobra.Command{
 }
 
 func containsWorkflowStateTags(content string) bool {
-	// 简单检查是否包含 [workflow-state: 标签
+	// 检查是否包含 [workflow-state: 标签
 	for _, line := range splitLines(content) {
-		if len(line) > 16 && line[:16] == "[workflow-state:" {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "[workflow-state:") {
 			return true
 		}
 	}

@@ -1,12 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
-	"specflow/internal/installer"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/installer"
 )
 
 var syncAgentCmd = &cobra.Command{
@@ -31,6 +32,37 @@ var syncAgentCmd = &cobra.Command{
 	},
 }
 
+var agentsListCmd = &cobra.Command{
+	Use:   "agents list",
+	Short: "列出 agents.yaml 中配置的所有 agent",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		specflowDir := getSpecflowDir()
+		agentsCfg, err := config.LoadAgents(specflowDir)
+		if err != nil {
+			return fmt.Errorf("读取 agents.yaml 失败: %w", err)
+		}
+
+		if useJSON(cmd) {
+			data, _ := json.MarshalIndent(agentsCfg.Agents, "", "  ")
+			fmt.Println(string(data))
+		} else {
+			if len(agentsCfg.Agents) == 0 {
+				fmt.Println("未配置任何 agent")
+				return nil
+			}
+			fmt.Printf("%-25s %-12s %-20s %s\n", "NAME", "SOURCE", "JSONL", "CONSTRAINTS")
+			for name, agent := range agentsCfg.Agents {
+				jsonl := ""
+				if agent.JSONLFile != nil {
+					jsonl = *agent.JSONLFile
+				}
+				fmt.Printf("%-25s %-12s %-20s %d rules\n", name, agent.Source, jsonl, len(agent.Constraints))
+			}
+		}
+		return nil
+	},
+}
+
 func init() {
-	rootCmd.AddCommand(syncAgentCmd)
+	rootCmd.AddCommand(syncAgentCmd, agentsListCmd)
 }

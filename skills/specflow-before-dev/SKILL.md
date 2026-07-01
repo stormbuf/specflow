@@ -31,6 +31,14 @@ phase: in_progress
 - [ ] 不执行 git commit / push / merge（交给 finish-work）
 - [ ] 遇到 prd 不明确的点，先停止并报告，不臆断
 
+> 若需向 `implement.jsonl` 追加上下文条目，使用 CLI 命令：
+>
+> ```bash
+> specflow add-context <task-dir> specflow-implement <file-path> <reason>
+> ```
+>
+> 该命令将文件路径与原因写入任务的 jsonl manifest，供 sub-agent 加载时读取。
+
 ### 3. 读取相关领域的 spec
 
 - 根据任务涉及的模块（backend / frontend / architecture 等），读取对应 spec 文件

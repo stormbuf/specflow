@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
-	"specflow/internal/fingerprint"
-	"specflow/internal/session"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/fingerprint"
+	"github.com/stormbuf/specflow/internal/session"
 )
 
 type CheckResult struct {

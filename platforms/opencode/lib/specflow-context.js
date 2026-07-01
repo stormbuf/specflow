@@ -9,9 +9,9 @@
 // - YAML 解析使用内置简易解析器（针对 agents.yaml 结构，非完整 YAML 实现）
 // - 所有函数都做防御性处理，永远不抛异常给宿主
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, appendFileSync } from "node:fs";
 import { join } from "node:path";
-import { execFile } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileP = promisify(execFile);
@@ -48,12 +48,27 @@ export function isSpecflowSubagent(input) {
 
 /**
  * 读取并解析 `.specflow/agents.yaml`。
- * 使用内置简易 YAML 解析器，返回 { agents: { <name>: { source, jsonl_file, ... } } }。
- * 文件不存在或解析失败时返回 { agents: {} }，不抛异常。
+ * 优先调用 `specflow agents list --json`（支持完整 YAML 语法），
+ * CLI 不可用时回退到内置简易解析器。
  * @param {string} directory 项目根目录绝对路径
  * @returns {{ agents: Record<string, object> }}
  */
 export function loadAgentsConfig(directory) {
+  // 优先使用 CLI 的 JSON 输出
+  try {
+    const stdout = execFileSync("specflow", ["agents", "list", "--json"], {
+      cwd: directory,
+      timeout: 5000,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    const agents = JSON.parse(stdout);
+    return { agents };
+  } catch (_) {
+    // CLI 不可用，回退到内置解析器
+  }
+
+  // 回退：内置简易 YAML 解析器
   try {
     const path = join(directory, ".specflow", "agents.yaml");
     if (!existsSync(path)) return { agents: {} };
@@ -62,7 +77,6 @@ export function loadAgentsConfig(directory) {
     if (!parsed || typeof parsed !== "object" || !parsed.agents) {
       return { agents: {} };
     }
-    // 规范化：确保 agents 是对象
     if (typeof parsed.agents !== "object" || Array.isArray(parsed.agents)) {
       return { agents: {} };
     }
@@ -115,6 +129,23 @@ export async function exec(cmd, options = {}) {
         : "") || (err.message || "");
     return { exitCode, stdout, stderr };
   }
+}
+
+/**
+ * 将错误日志写入 `.specflow/logs/plugins.log`。
+ * 仅当 `.specflow/logs` 目录已存在时才写入（不主动创建目录）。
+ * 写入失败时静默忽略，不影响宿主。
+ * @param {string} directory 项目根目录绝对路径
+ * @param {string} message 日志消息
+ */
+export function logError(directory, message) {
+  try {
+    const logsDir = join(directory, ".specflow", "logs");
+    if (!existsSync(logsDir)) return; // Don't create dirs, just skip if not a specflow project
+    const timestamp = new Date().toISOString();
+    const logLine = `[${timestamp}] ${message}\n`;
+    appendFileSync(join(logsDir, "plugins.log"), logLine);
+  } catch (_) { /* swallow */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -308,4 +339,5 @@ export default {
   isSpecflowSubagent,
   loadAgentsConfig,
   exec,
+  logError,
 };

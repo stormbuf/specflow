@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
-	"specflow/internal/context"
-	"specflow/internal/session"
-	"specflow/internal/taskstore"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/context"
+	"github.com/stormbuf/specflow/internal/session"
+	"github.com/stormbuf/specflow/internal/taskstore"
 )
 
 var getContextCmd = &cobra.Command{

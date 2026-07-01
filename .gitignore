@@ -1,5 +1,6 @@
 *.log
 .DS_Store
+Thumbs.db
 specflow/state.json
 
 # CLI 编译产物
@@ -15,3 +16,34 @@ specflow-cli/specflow
 /.opencode/skills/*
 !/.opencode/skills/specflow-workflow
 !/.opencode/skills/install-specflow-workflow
+
+# GoReleaser 构建输出
+dist/
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+credentials.json
+secrets.yaml
+secrets.yml
+*.secret
+
+# Cloud credentials
+.aws/
+.gcp/
+.kube/
+
+# Private keys
+id_rsa*
+id_ed25519*
+
+# Specflow local state
+.specflow/state.json
+.specflow/.developer
+.specflow/.runtime/
+.opencode/state*

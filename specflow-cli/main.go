@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-)
 
-var version = "0.1.0"
+	"github.com/stormbuf/specflow/internal/version"
+)
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
@@ -16,10 +16,10 @@ func main() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "specflow",
-	Short: "Specflow CLI — 变更生命周期管理工具",
-	Long:  "Specflow 是一个基于 spec + journal + workflow 的变更生命周期管理 CLI。",
-	Version: version,
+	Use:     "specflow",
+	Short:   "Specflow CLI — 变更生命周期管理工具",
+	Long:    "Specflow 是一个基于 spec + journal + workflow 的变更生命周期管理 CLI。",
+	Version: version.Version,
 }
 
 func init() {

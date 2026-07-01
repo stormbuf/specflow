@@ -10,9 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
-	"specflow/internal/fingerprint"
-	"specflow/internal/installer"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/fingerprint"
+	"github.com/stormbuf/specflow/internal/installer"
+	"github.com/stormbuf/specflow/internal/version"
 )
 
 var updateCmd = &cobra.Command{
@@ -65,9 +66,13 @@ var updateCmd = &cobra.Command{
 
 			switch result {
 			case fingerprint.MatchUserUnchanged:
-				// 用户未修改 → 安全覆盖
+			// 用户未修改 → 检查内容是否真的不同
+			if curHash != newHash {
 				writeFile(projectDir, relPath, newContent)
 				updated = append(updated, relPath)
+			} else {
+				skipped = append(skipped, relPath)
+			}
 
 			case fingerprint.MatchCLIUnchanged:
 				// CLI 未更新 → 保留用户版本
@@ -104,7 +109,7 @@ var updateCmd = &cobra.Command{
 
 		// 刷新指纹
 	newFP := &fingerprint.Fingerprints{
-		SpecflowVersion: version,
+		SpecflowVersion: version.Version,
 		Files:           make(map[string]string),
 	}
 	newFP.RecordAll(projectDir, managedFiles)
@@ -174,26 +179,9 @@ func writeFile(projectDir, relPath string, content []byte) error {
 	return os.WriteFile(fullPath, content, 0644)
 }
 
-var upgradeCmd = &cobra.Command{
-	Use:   "upgrade",
-	Short: "升级全局 CLI 二进制",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		channel, _ := cmd.Flags().GetString("channel")
-		fmt.Printf("升级 specflow CLI (channel: %s)...\n", channel)
-		fmt.Println("请从 GitHub Releases 下载最新版本:")
-		fmt.Println("  https://github.com/stormbuf/specflow/releases")
-		fmt.Println("或使用 Homebrew:")
-		fmt.Println("  brew upgrade specflow")
-		fmt.Println("或使用 go install:")
-		fmt.Println("  go install specflow@latest")
-		return nil
-	},
-}
-
 func init() {
 	updateCmd.Flags().Bool("force", false, "跳过冲突询问，全部覆盖")
-	upgradeCmd.Flags().String("channel", "latest", "升级通道: latest|beta")
-	rootCmd.AddCommand(updateCmd, upgradeCmd)
+	rootCmd.AddCommand(updateCmd)
 }
 
 // 确保 fs 包被引用

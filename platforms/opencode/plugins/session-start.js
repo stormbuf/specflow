@@ -17,6 +17,7 @@ import {
   isSpecflowProject,
   isSpecflowSubagent,
   exec,
+  logError,
 } from "../lib/specflow-context.js";
 
 /**
@@ -93,7 +94,8 @@ export default async ({ directory, client }) => {
         let ctx;
         try {
           ctx = JSON.parse(result.stdout);
-        } catch {
+        } catch (e) {
+          logError(directory, `session-start JSON parse failed: ${e.message}`);
           return; // 解析失败跳过
         }
         if (!ctx) return;
@@ -109,8 +111,9 @@ export default async ({ directory, client }) => {
         });
 
         processed.add(sessionID);
-      } catch {
+      } catch (e) {
         // 插件任何异常都不应影响宿主
+        logError(directory, `session-start failed: ${e.message}`);
       }
     },
   };

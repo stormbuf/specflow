@@ -1,4 +1,4 @@
-module specflow
+module github.com/stormbuf/specflow
 
 go 1.23
 

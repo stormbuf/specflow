@@ -1,0 +1,73 @@
+# GoReleaser configuration for specflow
+# Docs: https://goreleaser.com
+#
+# The Go module lives in specflow-cli/ (module github.com/stormbuf/specflow),
+# so every build uses `dir: specflow-cli` to run `go build` from there.
+
+project_name: specflow
+
+# Build output directory (default).
+dist: dist
+
+builds:
+  - id: specflow
+    # The module root; main package is package main at specflow-cli/main.go.
+    dir: specflow-cli
+    main: .
+    binary: specflow
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - arm64
+      - amd64
+    # Inject build metadata via ldflags into the internal/version package.
+    ldflags:
+      - -s -w
+      - -X github.com/stormbuf/specflow/internal/version.Version={{.Version}}
+      - -X github.com/stormbuf/specflow/internal/version.Commit={{.ShortCommit}}
+      - -X github.com/stormbuf/specflow/internal/version.Date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    name_template: "specflow_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: stormbuf
+    name: specflow
+  draft: false
+  prerelease: auto
+
+brews:
+  - name: specflow
+    repository:
+      owner: stormbuf
+      name: homebrew-tap
+      # Publishing to a different repository requires a token with write
+      # access on the tap repo. The default GITHUB_TOKEN cannot push
+      # cross-repo, so a PAT must be provided via this env var.
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/stormbuf/specflow
+    description: "Specflow CLI — spec-driven change lifecycle management tool"
+    license: MIT
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    install: |
+      bin.install "specflow"
+    test: |
+      system "#{bin}/specflow", "--version"

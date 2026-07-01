@@ -3,10 +3,11 @@
 ## 构建与开发
 
 - **编译 CLI**：`cd specflow-cli && go build -o specflow .`
-- **Go module**：模块名 `specflow`（本地模块，非远程 import path）
+- **Go module**：模块名 `github.com/stormbuf/specflow`（远程 import path，支持 `go install`）
 - **依赖**：`cobra`、`yaml.v3`（见 `specflow-cli/go.mod`）
 - **编译产物** `specflow-cli/specflow` 已在 `.gitignore` 中排除，不要提交
-- **embed 资源同步**：`specflow-cli/resources/` 是 `skills/`、`agents/`、`specflow-runtime/`、`platforms/`、`spec-templates/` 的内嵌副本，通过 `//go:embed resources` 编译进二进制。修改源目录后必须同步：`rsync -av skills/ specflow-cli/resources/skills/`（其他目录同理），否则编译产物不含最新改动
+- **版本注入**：通过 `-ldflags` 注入 `internal/version` 包，开发时默认 `dev`，发布时由 GoReleaser 注入真实版本号
+- **embed 资源同步**：`specflow-cli/resources/` 是 `skills/`、`agents/`、`specflow-runtime/`、`platforms/`、`spec-templates/` 的内嵌副本，通过 `//go:embed all:resources` 编译进二进制。修改源目录后必须同步：`rsync -av skills/ specflow-cli/resources/skills/`（其他目录同理），否则编译产物不含最新改动
 
 ## 项目结构
 
@@ -37,7 +38,8 @@
 
 ## 当前仓库事实
 
-- Go CLI 已实现并通过端到端验证。
-- 11 个 skill 已实现（含 specflow-spec-bootstrap 从代码库自动生成 spec、specflow-session-insight 跨会话记忆检索、specflow-meta 架构理解与定制），目前是 placeholder 级别，后续根据实际使用迭代。
-- OpenCode 插件已实现（3 个 JS 插件 + 1 个共享 lib），通过 `node --check` 语法校验。
+- Go CLI 已实现并通过端到端验证（54/54 e2e 测试通过）。
+- 11 个 skill 已实现（含 specflow-spec-bootstrap 从代码库自动生成 spec、specflow-session-insight 跨会话记忆检索、specflow-meta 架构理解与定制），4 个核心 skill（brainstorm/before-dev/continue/finish-work）已是生产级内容。
+- OpenCode 插件已实现（3 个 JS 插件 + 1 个共享 lib），通过 `node --check` 语法校验，含错误日志记录到 `.specflow/logs/plugins.log`。
 - `specflow-cli/resources/` 是 embed 副本，修改源目录后需手动同步，否则编译产物不含最新改动。
+- 项目以 MIT 许可证开源，分发通过 GitHub Actions + GoReleaser 自动构建发布到 GitHub Releases 和 Homebrew tap。

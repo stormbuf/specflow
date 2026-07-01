@@ -15,6 +15,7 @@ import {
   isSpecflowProject,
   loadAgentsConfig,
   exec,
+  logError,
 } from "../lib/specflow-context.js";
 
 /**
@@ -48,9 +49,6 @@ ${originalPrompt || ""}`;
 }
 
 export default async ({ directory }) => {
-  // 启动时读一次 agents.yaml（后续不会热更新；如需热更新可改为每次 hook 读）
-  const config = loadAgentsConfig(directory);
-
   return {
     "tool.execute.before": async (input, output) => {
       try {
@@ -65,6 +63,8 @@ export default async ({ directory }) => {
         if (!subagentType || typeof subagentType !== "string") return;
 
         // 直接查配置，不做前缀替换
+        // 每次 hook 重新加载 agents.yaml（支持热更新）
+        const config = loadAgentsConfig(directory);
         const agentConf = config.agents
           ? config.agents[subagentType]
           : undefined;
@@ -72,7 +72,7 @@ export default async ({ directory }) => {
 
         // exec 调用 Go CLI 构建上下文
         const result = await exec(
-          ["specflow", "build-context", subagentType, "--json"],
+          ["specflow", "build-context", subagentType],
           { cwd: directory }
         );
         if (result.exitCode !== 0) return;
@@ -87,8 +87,9 @@ export default async ({ directory }) => {
           context,
           agentConf.constraints
         );
-      } catch {
+      } catch (e) {
         // 插件任何异常都不应影响宿主
+        logError(directory, `inject-subagent-context failed: ${e.message}`);
       }
     },
   };

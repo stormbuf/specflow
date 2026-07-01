@@ -10,9 +10,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"specflow/internal/config"
-	"specflow/internal/fingerprint"
-	"specflow/internal/vcs"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/fingerprint"
+	"github.com/stormbuf/specflow/internal/vcs"
 )
 
 // InstallMap 对应 install-map.yaml

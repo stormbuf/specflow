@@ -1,0 +1,35 @@
+# CI workflow — build, vet, and test on every push/PR to main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build, vet & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # The Go module (go.mod) lives in specflow-cli/.
+        working-directory: specflow-cli
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: specflow-cli/go.sum
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...

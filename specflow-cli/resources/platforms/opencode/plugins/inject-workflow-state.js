@@ -16,6 +16,7 @@ import {
   isSpecflowProject,
   isSpecflowSubagent,
   exec,
+  logError,
 } from "../lib/specflow-context.js";
 
 // 面包屑标签块正则，与接口契约 §3.3 一致。
@@ -42,8 +43,9 @@ function loadBreadcrumbs(directory) {
       const body = match[2];
       templates[status] = body;
     }
-  } catch {
+  } catch (e) {
     // 读取/解析失败不报错，buildBreadcrumb 会降级为固定文案
+    logError(directory, `loadBreadcrumbs failed: ${e.message}`);
   }
   return templates;
 }
@@ -73,7 +75,7 @@ function buildBreadcrumb(task, status, templates) {
  * @param {object} output hook 输出对象
  * @param {string} breadcrumb 面包屑文本
  */
-function injectNonDestructive(output, breadcrumb) {
+function injectNonDestructive(output, breadcrumb, directory) {
   try {
     const parts = (output && output.parts) || [];
     // 方案 A（优先）：插入独立 part，不修改用户 message text part
@@ -92,8 +94,9 @@ function injectNonDestructive(output, breadcrumb) {
     //   const original = parts[textPartIndex].text || "";
     //   parts[textPartIndex].text = `${breadcrumb}\n\n---\n\n${original}`;
     // }
-  } catch {
+  } catch (e) {
     // 注入失败不影响宿主
+    logError(directory, `injectNonDestructive failed: ${e.message}`);
   }
 }
 
@@ -116,7 +119,8 @@ export default async ({ directory }) => {
         let task = null;
         try {
           task = JSON.parse(result.stdout);
-        } catch {
+        } catch (e) {
+          logError(directory, `inject-workflow-state JSON parse failed: ${e.message}`);
           task = null; // CLI 输出 null 或解析失败均视为无活跃任务
         }
 
@@ -126,9 +130,10 @@ export default async ({ directory }) => {
 
         // 4. 构造面包屑并注入
         const breadcrumb = buildBreadcrumb(task, status, templates);
-        injectNonDestructive(output, breadcrumb);
-      } catch {
+        injectNonDestructive(output, breadcrumb, directory);
+      } catch (e) {
         // 插件任何异常都不应影响宿主
+        logError(directory, `inject-workflow-state failed: ${e.message}`);
       }
     },
   };

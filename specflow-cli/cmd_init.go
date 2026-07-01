@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/installer"
+	"github.com/stormbuf/specflow/internal/installer"
 )
 
 var initCmd = &cobra.Command{

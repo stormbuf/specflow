@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/worktree"
+	"github.com/stormbuf/specflow/internal/worktree"
 )
 
 var worktreeCmd = &cobra.Command{

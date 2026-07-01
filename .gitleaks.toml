@@ -1,0 +1,4 @@
+title = "Specflow Secret Scanning"
+
+[extend]
+useDefault = true

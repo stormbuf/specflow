@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/config"
 )
 
 var memCmd = &cobra.Command{

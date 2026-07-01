@@ -20,7 +20,13 @@ phase: any
 
 - 读取当前活跃任务的 `task.json`，获取 `status` 字段
 - status 取值：`planning` / `in_progress` / `completed`
-- 若无活跃任务，提示用户先创建任务
+- 若无活跃任务，按以下方式处理：
+
+```bash
+specflow task current          # 检查当前任务
+specflow task start            # 启动已有任务（指定 task-dir 或使用当前指针）
+specflow task create --title "..." --intent "..."  # 或创建新任务
+```
 
 ### 2. 读取 workflow.md 对应面包屑
 

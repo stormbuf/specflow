@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"specflow/internal/config"
-	"specflow/internal/session"
-	"specflow/internal/taskstore"
-	"specflow/internal/vcs"
+	"github.com/stormbuf/specflow/internal/config"
+	"github.com/stormbuf/specflow/internal/session"
+	"github.com/stormbuf/specflow/internal/taskstore"
+	"github.com/stormbuf/specflow/internal/vcs"
 )
 
 var taskCmd = &cobra.Command{

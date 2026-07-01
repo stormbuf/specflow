@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/stormbuf/specflow/internal/version"
 )
 
 // Config 对应 .specflow/config.yaml
@@ -30,7 +32,7 @@ type SessionConfig struct {
 // DefaultConfig 返回默认配置
 func DefaultConfig() *Config {
 	return &Config{
-		SpecflowVersion: "0.1.0",
+		SpecflowVersion: version.Version,
 		VCS:             "jj",
 		Platform:        "opencode",
 		MaxJournalLines: 2000,
