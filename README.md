@@ -162,11 +162,6 @@ agents:
 - `specflow upgrade` — 升级全局 CLI 二进制
 - `specflow update` — 同步项目到本地 CLI 版本，含文件指纹冲突检测
 
-## 文档
-
-- [重构设计思路](docs/重构设计思路.md) — 背景、调研、架构决策、方案设计
-- [接口契约](docs/接口契约.md) — 五个模块的详细接口定义
-
 ## 致谢
 
 specflow 的架构设计参考了 [Trellis](https://github.com/mindfold-ai/Trellis)（AGPL-3.0），包括 spec 驱动的工作流、上下文注入机制、跨会话记忆等核心理念。感谢 mindfold-ai 团队的设计探索。
