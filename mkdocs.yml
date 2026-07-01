@@ -11,7 +11,6 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - search.suggest
     - search.highlight
@@ -35,6 +34,9 @@ theme:
   font:
     text: Noto Sans SC
     code: JetBrains Mono
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition
