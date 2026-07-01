@@ -35,6 +35,9 @@ secrets.yml
 id_rsa*
 id_ed25519*
 
+# TRAE workspace artifacts
+.uploads/
+
 # Specflow local state
 .specflow/state.json
 .specflow/.developer
