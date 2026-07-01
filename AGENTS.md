@@ -19,7 +19,6 @@
 | `specflow-runtime/` | 运行时模板（workflow.md / config.yaml / agents.yaml / spec seed / workspace index / worktree.yaml / agents.md.tmpl） |
 | `spec-templates/` | spec 模板源文件（9 个分类：guides / backend / frontend / architecture / testing / security / api / devops / git-conventions），每个分类含 .meta.yaml 声明描述，供 `spec install` 读取 |
 | `platforms/opencode/` | OpenCode 平台适配（3 个 JS 插件 + 1 个共享 lib + install-map.yaml） |
-| `specflow-workflow/` | **旧版单体 skill，已废弃，不要修改** |
 
 ## 版本管理
 
@@ -32,7 +31,6 @@
 - ✅ 可以修改 `specflow-cli/`、`skills/`、`agents/`、`specflow-runtime/`、`spec-templates/`、`platforms/` 下的源文件
 - ✅ 修改源目录后同步 `specflow-cli/resources/` embed 副本
 - ⚠️ 修改 `skills/` 或 `agents/` 后需同步对应的 `specflow-cli/resources/` 副本
-- ❌ 不要修改 `specflow-workflow/`（已废弃）
 - ❌ 不要提交 `specflow-cli/specflow` 二进制文件
 - ❌ 不要提交 `.specflow/state.json` 和 `.opencode/` 中未显式放行的本地状态
 

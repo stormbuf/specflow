@@ -10,13 +10,6 @@ specflow-cli/specflow
 .idea/
 .vscode/
 
-# 旧 opencode 配置（重构前遗留）
-/.opencode/*
-!/.opencode/skills/
-/.opencode/skills/*
-!/.opencode/skills/specflow-workflow
-!/.opencode/skills/install-specflow-workflow
-
 # GoReleaser 构建输出
 dist/
 
